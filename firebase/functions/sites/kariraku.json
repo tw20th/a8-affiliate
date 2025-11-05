@@ -3,11 +3,24 @@
   "displayName": "Kariraku（カリラク）",
   "domain": "www.kariraku.com",
 
-  "gsc": { "propertyUrl": "https://www.kariraku.com" },
+  "gsc": { "propertyUrl": "sc-domain:kariraku.com" },
 
   "keywordPools": {
-    "comparison": ["冷蔵庫 レンタル 一人暮らし", "洗濯機 レンタル 料金 比較"],
-    "guide": ["家電 レンタル おすすめ", "家電 レンタル 初期費用 なし"]
+    "comparison": [
+      "冷蔵庫 レンタル 一人暮らし",
+      "洗濯機 レンタル 料金 比較",
+      "家電 レンタル 新生活 セット",
+      "ドラム式 洗濯機 レンタル 比較",
+      "食洗機 レンタル 料金"
+    ],
+    "guide": [
+      "家電レンタル 初心者 向け",
+      "短期 レンタル 退去 まで",
+      "冷蔵庫 サイズ 選び方 レンタル"
+    ]
+  },
+  "contentPlan": {
+    "weekly": { "pillarIntent": "比較/選び方の柱記事を増やす" }
   },
 
   "brand": {

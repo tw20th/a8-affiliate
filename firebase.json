@@ -2,5 +2,10 @@
   "functions": {
     "predeploy": ["pnpm -C firebase/functions run predeploy:functions"],
     "source": "firebase/functions"
+  },
+  "hosting": {
+    "public": "apps/web/out",
+    "ignore": ["**/.*", "**/node_modules/**"],
+    "rewrites": [{ "source": "/trackClick", "function": "trackClick" }]
   }
 }

@@ -10,6 +10,8 @@ import { loadPainRules } from "@/lib/pain-helpers";
 import BlogBody from "@/components/blog/BlogBody";
 import { normalizeBlogMarkdown, extractToc, isA8Url } from "@/utils/markdown";
 import RelatedByTags from "@/components/blog/RelatedByTags";
+import TrackBlog from "@/components/analytics/TrackBlog";
+import CtaLink from "@/components/analytics/CtaLink";
 
 export const revalidate = 3600;
 export const dynamic = "force-dynamic";
@@ -95,8 +97,27 @@ export default async function BlogDetail({
   const imageCredit = (blog as any).imageCredit ?? null;
   const imageCreditLink = (blog as any).imageCreditLink ?? null;
 
+  function sendBlogEvent(slug: string, type: "view" | "cta") {
+    try {
+      const endpoint = process.env.NEXT_PUBLIC_TRACK_URL || "/trackClick";
+      const payload = JSON.stringify({ slug, type });
+      if ("sendBeacon" in navigator) {
+        const blob = new Blob([payload], { type: "application/json" });
+        (navigator as any).sendBeacon(endpoint, blob);
+      } else {
+        fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          keepalive: true,
+        });
+      }
+    } catch {}
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
+      <TrackBlog slug={blog.slug} />
       {/* breadcrumb */}
       <nav className="text-sm text-gray-500">
         <Link href="/" className="underline">
@@ -211,7 +232,8 @@ export default async function BlogDetail({
             （{bestPrice.source === "amazon" ? "Amazon" : "楽天"} /{" "}
             {fmt(bestPrice.updatedAt)}）
           </div>
-          <a
+          <CtaLink
+            slug={blog.slug}
             href={`/out/${encodeURIComponent(
               blog.relatedAsin
             )}?to=${encodeURIComponent(bestPrice.url)}&src=blog`}
@@ -220,7 +242,7 @@ export default async function BlogDetail({
             className="inline-block rounded-lg border px-4 py-2 font-medium hover:shadow-sm"
           >
             {bestPrice.source === "amazon" ? "Amazonで見る" : "楽天で見る"}
-          </a>
+          </CtaLink>
         </div>
       )}
 
@@ -271,7 +293,8 @@ export default async function BlogDetail({
           </li>
           {bestPrice && blog.relatedAsin && (
             <li>
-              <a
+              <CtaLink
+                slug={blog.slug}
                 href={`/out/${encodeURIComponent(
                   blog.relatedAsin
                 )}?to=${encodeURIComponent(bestPrice.url)}&src=blog_bottom`}
@@ -281,7 +304,7 @@ export default async function BlogDetail({
               >
                 公式の価格ページを開く（
                 {bestPrice.source === "amazon" ? "Amazon" : "楽天"}）
-              </a>
+              </CtaLink>
             </li>
           )}
           <li>

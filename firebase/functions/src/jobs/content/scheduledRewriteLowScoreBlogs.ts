@@ -8,10 +8,11 @@ const REGION = process.env.FUNCTIONS_REGION || "asia-northeast1";
 const TZ = "Asia/Tokyo";
 const db = getFirestore();
 
-// リライト候補の下限（しきい値は後で環境変数に出してOK）
+// リライト候補のしきい値（必要に応じて環境変数で調整）
 const MIN_VIEWS = Number(process.env.REWRITE_MIN_VIEWS ?? 20);
 const MAX_CTR = Number(process.env.REWRITE_MAX_CTR ?? 0.02); // 2%
 const MIN_AVG_TIME = Number(process.env.REWRITE_MIN_AVG ?? 30); // 秒
+const MIN_SCORE = Number(process.env.REWRITE_MIN_SCORE ?? 65); // 最新スコアがこれ未満なら候補
 
 export const scheduledRewriteLowScoreBlogs = functions
   .region(REGION)
@@ -19,31 +20,38 @@ export const scheduledRewriteLowScoreBlogs = functions
   .pubsub.schedule("0 23 * * *")
   .timeZone(TZ)
   .onRun(async () => {
-    // 直近7日程度で1本だけ候補抽出（views, ctr, avgReadTimeSec）
+    // 直近7日から候補抽出
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const snap = await db
       .collection("blogs")
       .where("createdAt", "<=", Date.now())
       .where("createdAt", ">=", sevenDaysAgo)
-      .limit(100)
+      .limit(200)
       .get();
 
     let candidate: FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData> | null =
       null;
 
     for (const d of snap.docs) {
-      const m = (d.get("metrics") || {}) as {
+      const metrics = (d.get("metrics") || {}) as {
         views?: number;
         outboundClicks?: number;
         avgReadTimeSec?: number;
       };
-      const views = Number(m.views ?? 0);
-      const clicks = Number(m.outboundClicks ?? 0);
+      const views = Number(metrics.views ?? 0);
+      const clicks = Number(metrics.outboundClicks ?? 0);
       const ctr = views > 0 ? clicks / views : 0;
-      const avg = Number(m.avgReadTimeSec ?? 0);
+      const avg = Number(metrics.avgReadTimeSec ?? 0);
 
-      // “一定以上見られているのに成果が弱い”を優先
-      if (views >= MIN_VIEWS && (ctr <= MAX_CTR || avg <= MIN_AVG_TIME)) {
+      // 追加：最新スコアも参照
+      const latestScore = Number(d.get("latestScore") ?? 0);
+
+      // “一定以上見られているのに成果が弱い/読まれていない/スコアが低い”を優先
+      const weakByBehavior =
+        views >= MIN_VIEWS && (ctr <= MAX_CTR || avg <= MIN_AVG_TIME);
+      const weakByScore = latestScore > 0 && latestScore < MIN_SCORE;
+
+      if (weakByBehavior || weakByScore) {
         candidate = d;
         break;
       }
@@ -63,7 +71,7 @@ export const scheduledRewriteLowScoreBlogs = functions
     const content = String(data.content || "");
     const tags = Array.isArray(data.tags) ? data.tags : [];
 
-    // テンプレは既存の Kariraku サービス記事を再利用（タイトル・導入・見出しを刷新）
+    // 既存テンプレを使って中身を刷新
     const out = await generateBlogContent({
       siteId,
       siteName: "Kariraku（カリラク）",
@@ -75,30 +83,36 @@ export const scheduledRewriteLowScoreBlogs = functions
     });
 
     const rewritten = stripPlaceholders(out.content || "");
-    const afterScore = analyzeSeo(
-      `# ${out.title || title}\n\n${rewritten || content}`
-    ).total;
+    const afterTitle = out.title || title;
+    const afterContent = rewritten || content;
+    const afterScore = analyzeSeo(`# ${afterTitle}\n\n${afterContent}`).total;
+
+    // 履歴は配列を読み出して連結 → 直近50件に丸めて set（arrayUnionは使わない）
+    const before = (candidate.get("analysisHistory") as any[]) || [];
+    const limited = before
+      .concat([
+        {
+          score: Number(afterScore ?? 0),
+          suggestions: [] as string[],
+          createdAt: Date.now(),
+          source: "auto-rewrite",
+        },
+      ])
+      .slice(-50);
 
     await candidate.ref.set(
       {
-        // “リライト版”として本文とタイトルだけ置き換え（必要に応じて別スラッグ運用も可）
-        title: out.title || title,
-        content: rewritten || content,
+        title: afterTitle,
+        content: afterContent,
         summary: out.excerpt || null,
         tags: out.tags && out.tags.length ? out.tags : tags,
+        latestScore: afterScore,
+        lastAnalyzedAt: Date.now(),
         updatedAt: Date.now(),
-        // 履歴追記（Before/After比較用）
-        analysisHistory: (candidate.get("analysisHistory") || []).concat([
-          {
-            score: Number(afterScore ?? 0),
-            suggestions: [] as string[],
-            createdAt: Date.now(),
-            source: "auto-rewrite",
-          },
-        ]),
+        analysisHistory: limited,
       },
       { merge: true }
     );
 
-    return { rewritten: 1, slug: candidate.id };
+    return { rewritten: 1, slug: candidate.id, afterScore };
   });

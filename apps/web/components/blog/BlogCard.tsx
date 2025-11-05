@@ -3,15 +3,32 @@
 import Link from "next/link";
 import { summaryFromContent } from "@/utils/text";
 
+function sendBlogEvent(slug: string, type: "view" | "cta") {
+  try {
+    const endpoint = process.env.NEXT_PUBLIC_TRACK_URL || "/trackClick";
+    const payload = JSON.stringify({ slug, type });
+    if ("sendBeacon" in navigator) {
+      const blob = new Blob([payload], { type: "application/json" });
+      (navigator as any).sendBeacon(endpoint, blob);
+    } else {
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true,
+      });
+    }
+  } catch {}
+}
+
 export type BlogCardProps = {
   slug: string;
   title: string;
   summary?: string | null;
   content?: string | null; // フォールバック用（任意）
   imageUrl?: string | null;
-  imageCredit?: string | null; // ★ 追加
-  imageCreditLink?: string | null; // ★ 追加
-  /** 公開日時（なければ updatedAt を出す） */
+  imageCredit?: string | null;
+  imageCreditLink?: string | null;
   publishedAt?: number | null;
   updatedAt?: number | null;
 };
@@ -70,7 +87,12 @@ export default function BlogCard({
 
       <div className="min-w-0">
         <h2 className="text-lg font-semibold">
-          <Link href={`/blog/${hrefSlug}`}>{title}</Link>
+          <Link
+            href={`/blog/${hrefSlug}`}
+            onClick={() => sendBlogEvent(slug, "cta")}
+          >
+            {title}
+          </Link>
         </h2>
 
         {fallback ? (

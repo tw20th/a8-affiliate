@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
 import { analyzeSeo } from "../../lib/seo/analyzeSeo.js"; // ← alias = analyzeMarkdown
 
 const REGION = process.env.FUNCTIONS_REGION || "asia-northeast1";
@@ -61,10 +61,19 @@ export const scheduledAnalyzeBlogsNight = functions
         source: "auto-night",
       };
 
+      const before = d.get("analysisHistory") as any[] | undefined;
+      const hist = (Array.isArray(before) ? before : []).concat([entry]);
+      // 履歴は直近50件まで（必要なら値は調整）
+      const limited = hist.slice(-50);
+
       await d.ref.set(
         {
-          analysisHistory: FieldValue.arrayUnion(entry),
-          updatedAt: Date.now(),
+          // 履歴を上書き（arrayUnion は去重不可＆順序管理できないためここは set で統一）
+          analysisHistory: limited,
+          // 参照用の最新スコア
+          latestScore: entry.score,
+          lastAnalyzedAt: entry.createdAt,
+          updatedAt: entry.createdAt,
         },
         { merge: true }
       );

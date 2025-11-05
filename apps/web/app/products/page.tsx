@@ -1,3 +1,4 @@
+// apps/web/app/products/page.tsx
 import type { Product, OfferSource } from "@affiscope/shared-types";
 import Link from "next/link";
 import ProductCard from "@/components/products/ProductCard";
@@ -16,12 +17,8 @@ import { redirect } from "next/navigation";
 import PainRail from "@/components/pain/PainRail";
 import { loadPainRules } from "@/lib/pain-helpers";
 
-const s = getSiteEntry();
-if (s.features?.products === false) {
-  redirect("/offers"); // Kariraku など products を使わないサイト
-}
-
 export const revalidate = 60;
+// ★ ビルド時実行を避ける
 export const dynamic = "force-dynamic";
 
 type FsQueryArg = {
@@ -185,10 +182,12 @@ export default async function ProductsPage({
 }: {
   searchParams?: SP;
 }) {
-  const s = getSiteEntry(); // ← 関数内で呼ぶ
+  // ★ 判定は「関数内」でのみ実行
+  const s = getSiteEntry();
   if (s.features?.products === false) {
-    redirect("/offers");
+    redirect("/offers"); // Kariraku など products を使わないサイト
   }
+
   const cfg = getSiteConfig(); // urlOrigin など（構造化データ用）
   const painRules = await loadPainRules(s.siteId);
 

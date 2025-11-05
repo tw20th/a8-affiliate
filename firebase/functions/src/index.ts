@@ -47,6 +47,7 @@ export {
   generateFromGSC,
   runGenerateFromGscNow,
 } from "./jobs/seo/generateFromGSC.js";
+export { runUpdateBlogSeoNow } from "./jobs/seo/updateBlogSeoFromGSC.js";
 
 /*
   注意:

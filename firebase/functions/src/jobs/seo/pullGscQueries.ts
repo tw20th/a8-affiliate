@@ -7,9 +7,10 @@ import { makeGscJwt, resolvePropertyUrl } from "../../services/gsc/client.js";
 if (getApps().length === 0) initializeApp();
 const db = getFirestore();
 
-const GSC_SA_JSON = defineSecret("GSC_SA_JSON"); // Secret Manager
+const GSC_SA_JSON = defineSecret("GSC_SA_JSON");
 
-type Row = {
+// 型を上に宣言
+type QueryRow = {
   query: string;
   clicks: number;
   impressions: number;
@@ -17,20 +18,24 @@ type Row = {
   position: number;
 };
 
-async function fetchQueries(
-  saJson: string,
-  propertyUrl: string,
-  days = 28
-): Promise<Row[]> {
-  const sc = makeGscJwt(saJson);
+type PageQueryRow = {
+  page: string;
+  query: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+};
+
+async function fetchRows(sc: any, siteUrl: string, days = 28) {
   const today = new Date();
   const end = today.toISOString().slice(0, 10);
   const start = new Date(today.getTime() - (days - 1) * 24 * 3600 * 1000)
     .toISOString()
     .slice(0, 10);
 
-  const { data } = await sc.searchanalytics.query({
-    siteUrl: propertyUrl,
+  const qRes = await sc.searchanalytics.query({
+    siteUrl,
     requestBody: {
       startDate: start,
       endDate: end,
@@ -38,29 +43,48 @@ async function fetchQueries(
       rowLimit: 1000,
     },
   });
+  const pRes = await sc.searchanalytics.query({
+    siteUrl,
+    requestBody: {
+      startDate: start,
+      endDate: end,
+      dimensions: ["PAGE", "QUERY"],
+      rowLimit: 25000,
+    },
+  });
 
-  const rows: Row[] = (data.rows || [])
-    .map((r) => ({
-      query: r.keys?.[0] || "",
-      clicks: r.clicks ?? 0,
-      impressions: r.impressions ?? 0,
-      ctr:
-        r.impressions ?? 0
-          ? Number(r.clicks || 0) / Number(r.impressions || 1)
-          : 0,
-      position: r.position ?? 0,
-    }))
-    .filter((r) => r.query);
+  const rowsQ: QueryRow[] = (qRes.data.rows || [])
+    .map(
+      (r: any): QueryRow => ({
+        query: r.keys?.[0] || "",
+        clicks: r.clicks ?? 0,
+        impressions: r.impressions ?? 0,
+        ctr:
+          r.impressions ?? 0
+            ? Number(r.clicks || 0) / Number(r.impressions || 1)
+            : 0,
+        position: r.position ?? 0,
+      })
+    )
+    .filter((r: QueryRow) => r.query);
 
-  return rows;
-}
+  const rowsPQ: PageQueryRow[] = (pRes.data.rows || [])
+    .map(
+      (r: any): PageQueryRow => ({
+        page: r.keys?.[0] || "",
+        query: r.keys?.[1] || "",
+        clicks: r.clicks ?? 0,
+        impressions: r.impressions ?? 0,
+        ctr:
+          r.impressions ?? 0
+            ? Number(r.clicks || 0) / Number(r.impressions || 1)
+            : 0,
+        position: r.position ?? 0,
+      })
+    )
+    .filter((r: PageQueryRow) => r.page && r.query);
 
-async function saveRows(siteId: string, rows: Row[]) {
-  const now = Date.now();
-  const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const col = db.collection("sites").doc(siteId).collection("seo");
-  await col.doc("latest").set({ rows, updatedAt: now });
-  await col.doc(ymd).set({ rows, updatedAt: now });
+  return { rowsQ, rowsPQ };
 }
 
 async function runOnceForSite(saJson: string, siteId: string) {
@@ -70,17 +94,47 @@ async function runOnceForSite(saJson: string, siteId: string) {
     domain?: string;
     gsc?: { propertyUrl?: string };
   };
-
   const propertyUrl = resolvePropertyUrl(site);
-  const rows = await fetchQueries(saJson, propertyUrl, 28);
-  await saveRows(siteId, rows);
-  return { siteId, count: rows.length, propertyUrl };
+
+  const latest = await db
+    .collection("sites")
+    .doc(siteId)
+    .collection("seo")
+    .doc("latest")
+    .get();
+  const days = latest.exists ? 28 : 90;
+
+  const sc = makeGscJwt(saJson);
+  const { rowsQ, rowsPQ } = await fetchRows(sc, propertyUrl, days);
+
+  const now = Date.now();
+  const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const col = db.collection("sites").doc(siteId).collection("seo");
+
+  await col
+    .doc("latest")
+    .set({ rows: rowsQ, updatedAt: now }, { merge: false });
+  await col
+    .doc("pageLatest")
+    .set({ rows: rowsPQ, updatedAt: now }, { merge: false });
+
+  await col.doc(ymd).set({ rows: rowsQ, updatedAt: now }, { merge: false });
+  await col
+    .doc(`${ymd}-page`)
+    .set({ rows: rowsPQ, updatedAt: now }, { merge: false });
+
+  return {
+    siteId,
+    countQuery: rowsQ.length,
+    countPageQuery: rowsPQ.length,
+    propertyUrl,
+  };
 }
 
 export const scheduledPullGsc = functions
   .runWith({ secrets: [GSC_SA_JSON], timeoutSeconds: 300, memory: "256MB" })
   .region("asia-northeast1")
-  .pubsub.schedule("30 2 * * *") // JST 02:30 毎日
+  .pubsub.schedule("30 2 * * *")
   .timeZone("Asia/Tokyo")
   .onRun(async () => {
     const saJson = GSC_SA_JSON.value();
