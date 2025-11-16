@@ -2,7 +2,50 @@
   "program": {
     "programId": "s00000026260001",
     "advertiser": "株式会社トミザワ",
-    "category": ["家電", "レンタル", "サブスク"]
+    "category": ["家電", "レンタル", "サブスク"],
+    "advertiserInfo": {
+      "companyName": "株式会社トミザワ",
+      "officialName": "株式会社トミザワ",
+      "brandName": "家電レンタルみんなのHappy",
+      "mission": "「誰かの不要」と「誰かの必要」をつなげるリユース事業・レンタル事業を通じて、暮らしとオフィスを支えることを目指している。",
+      "founded": "1981年4月9日",
+      "headquarters": "〒134-0084 東京都江戸川区東葛西6-47-16",
+      "storeLocation": "〒134-0088 東京都江戸川区西葛西7-5-3",
+      "capital": "1,000万円",
+      "employees": "152名（グループ全体目安）",
+      "representative": "代表取締役社長 池島 隆",
+      "businessAreas": [
+        "リユース事業（オフィス家具・家電・ビジネスフォンなど）",
+        "家電レンタル事業（家電レンタルみんなのHappy）",
+        "倉庫業・トランクルーム事業",
+        "オフィス移転・内装工事",
+        "電話・通信工事・通信回線販売事業",
+        "事務用品販売",
+        "リサイクルショップ事業"
+      ],
+      "strengths": [
+        "関東エリアを中心に長年リユース事業を展開している実績",
+        "家電専門リユースショップ由来の豊富な在庫と整備ノウハウ",
+        "一人暮らし〜法人・寮・留学生までカバーする家電セット提案力",
+        "自社配送による設置・回収まで一気通貫のサービス提供"
+      ],
+      "officialUrls": {
+        "company": "https://www.tomizawa.net/",
+        "service": "https://happyrent.jp/",
+        "reuseShop": "https://www.119happy.net/"
+      },
+      "contacts": {
+        "storeTel": "03-3688-1230",
+        "headOfficeTel": "03-3688-7511",
+        "email": "info@happyrent.jp",
+        "inquiryTime": "12:00〜19:00",
+        "regularHolidays": "水曜・日曜・祝日（夏季・年末年始休業あり）"
+      },
+      "legal": {
+        "tradeLawUrl": "https://happyrent.jp/law",
+        "privacyPolicyUrl": "https://happyrent.jp/privacypolicy"
+      }
+    }
   },
   "offer": {
     "id": "s00000026260001:happyrent",
@@ -36,6 +79,13 @@
       "confirmRate": "100%",
       "lookbackDays": 90,
       "confirmEta": "約30日",
+      "ui": {
+        "priceLabel": "月額 4,400円〜",
+        "minTermLabel": "短期 30泊31日〜 / 月額 6ヶ月〜",
+        "isPriceDynamic": true,
+        "compareHighlight": "最短30日〜設置・回収込みで一式使える"
+      },
+
       "payment": [
         "クレジットカード",
         "Amazon Pay",
@@ -44,6 +94,7 @@
         "銀行振込"
       ],
       "paymentNotes": "サブスクはクレカのみ",
+
       "deliveryDays": ["火", "木", "土", "日"],
       "timeSlot": "時間指定不可（前日におおよその時間連絡）",
       "areas": [
@@ -58,75 +109,191 @@
         "subscriptionInit": "6,600円（税込）"
       },
       "campaigns": ["2周年キャンペーン", "ご近所割"],
-      "creatives": [
+
+      "pricing": {
+        "plan": "both",
+        "monthlyPriceFrom": 4400,
+        "shortBase": {
+          "days": 30,
+          "priceFrom": 32700
+        },
+        "extendPerDayExample": null,
+        "priceIsDynamic": true,
+        "priceLastChecked": 0
+      },
+      "minTerm": {
+        "shortDays": 30,
+        "monthlyMonths": 6
+      },
+      "paymentDetail": {
+        "methods": [
+          "クレジットカード",
+          "コンビニ支払",
+          "銀行振込",
+          "Amazon Pay",
+          "PayPay"
+        ],
+        "cardBrands": ["VISA", "JCB", "MasterCard", "AMEX", "Diners"],
+        "threeDSecure": null,
+        "notes": [
+          "サブスク契約はクレジットカードのみ",
+          "一括前払いの場合は30日・90日・6ヶ月・1年・2年の契約プランから選択"
+        ],
+        "timing": {
+          "shortRentalCharge": "一括前払い：申込時に全期間分を決済",
+          "extensionCharge": "契約延長時に再契約として請求",
+          "monthlyCharge": "サブスクは毎月自動課金（1か月ごとの自動更新）"
+        },
+        "billingFailure": "決済失敗時は支払い方法の変更や再手続きが必要"
+      },
+      "shipping": {
+        "carrier": "自社配送",
+        "roundTripFree": true,
+        "exceptions": {},
+        "returnLabelIncluded": false,
+        "returnMethods": ["自社スタッフによる回収のみ"],
+        "packagingNote": "設置・回収までスタッフ対応。利用者側で梱包作業は不要。",
+        "areaNote": "東京23区＋武蔵野市・調布市・三鷹市・狛江市、川崎市一部、千葉県北西部、埼玉県南部の対応エリア内のみ"
+      },
+      "warranty": {
+        "normalWearFree": true,
+        "repairCapYen": null,
+        "lostTheftMax": null,
+        "notes": [
+          "設置前に動作確認済み",
+          "レンタル期間中の自然故障は交換または修理で対応",
+          "引越し時の故障・破損など一部は保証対象外となる場合あり"
+        ]
+      },
+      "policies": {
+        "disclosureRequired": true,
+        "prLabelRequired": true,
+        "listingAdsNG": true
+      },
+      "faqHints": [
+        "レンタル期間は30日・90日・6ヶ月・1年・2年から選択可能（サブスクは最低6ヶ月）",
+        "サブスクは1か月ごと自動延長。解約は1か月以上前の連絡が必要",
+        "引越し時は配送可能エリア内なら継続利用可。エリア外は有料集荷",
+        "法人・寮・留学生などの中長期利用にも対応"
+      ],
+      "rentalPolicy": {
+        "short": {
+          "extensionMaxNights": null,
+          "extensionRule": "一括前払いプランは契約終了前に再契約として延長"
+        },
+        "monthly": {
+          "renewal": "1か月ごとの自動更新",
+          "charge": "毎月の更新日に自動請求",
+          "cancel": "解約希望月の1か月以上前までに連絡"
+        },
+        "changesAfterOrder": "お届け日時の変更は事前連絡で調整。プラン変更は要問い合わせ。"
+      },
+      "rentalKinds": [
+        "家電セットレンタル（一括払い）",
+        "家電セットレンタル（サブスク）",
+        "単品レンタル"
+      ],
+      "genres": [
+        "冷蔵庫",
+        "洗濯機",
+        "テレビ",
+        "空調・季節家電",
+        "生活家電",
+        "調理家電",
+        "照明器具"
+      ],
+      "rankingSamples": [
         {
-          "materialId": "001",
-          "type": "text",
-          "label": "家電レンタルみんなのHappy",
-          "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5YJRM"
+          "title": "〖サブスク・月々払い〗冷蔵庫 洗濯機 電子レンジ 3点セット",
+          "minTermText": "サブスク（最低6ヶ月）",
+          "priceText": "月額 4,400円(税込) 〜"
         },
         {
-          "materialId": "002",
-          "type": "text",
-          "label": "月1,870円から使える生活家電【家電レンタルみんなのHappy】",
-          "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5YRHE"
+          "title": "〖家電レンタル〗冷蔵庫 洗濯機 電子レンジ 3点セット",
+          "minTermText": "30日〜2年",
+          "priceText": "32,700円〜63,900円(税込) ※目安"
         },
         {
-          "materialId": "003",
-          "type": "text",
-          "label": "家電は買うより格安レンタル【家電レンタルみんなのHappy】",
-          "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5YZ76"
-        },
-        {
-          "materialId": "005",
-          "type": "banner",
-          "size": "300x250",
-          "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5ZEMP",
-          "imgSrc": "https://www24.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001005000&mc=1"
-        },
-        {
-          "materialId": "006",
-          "type": "banner",
-          "size": "100x60",
-          "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5ZMCH",
-          "imgSrc": "https://www21.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001006000&mc=1"
-        },
-        {
-          "materialId": "007",
-          "type": "banner",
-          "size": "120x60",
-          "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5ZU29",
-          "imgSrc": "https://www26.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001007000&mc=1"
-        },
-        {
-          "materialId": "008",
-          "type": "banner",
-          "size": "300x250",
-          "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+601S1",
-          "imgSrc": "https://www29.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001008000&mc=1"
-        },
-        {
-          "materialId": "009",
-          "type": "banner",
-          "size": "300x250",
-          "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+609HT",
-          "imgSrc": "https://www28.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001009000&mc=1"
-        },
-        {
-          "materialId": "010",
-          "type": "banner",
-          "size": "120x60",
-          "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+60H7L",
-          "imgSrc": "https://www24.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001010000&mc=1"
-        },
-        {
-          "materialId": "019",
-          "type": "banner",
-          "size": "250x250",
-          "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+62ENL",
-          "imgSrc": "https://www23.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001019000&mc=1"
+          "title": "〖家電レンタル〗冷蔵庫 洗濯機 テレビ 電子レンジ 炊飯器 掃除機 6点セット",
+          "minTermText": "30日〜2年",
+          "priceText": "45,100円〜90,500円(税込) ※目安"
         }
-      ]
-    }
+      ],
+      "guideLinks": {
+        "payment": "https://happyrent.jp/shopping-guide",
+        "shipping": "https://happyrent.jp/shopping-guide",
+        "warranty": "https://happyrent.jp/shopping-guide",
+        "faq": "https://happyrent.jp/questions"
+      }
+    },
+    "creatives": [
+      {
+        "materialId": "001",
+        "type": "text",
+        "label": "家電レンタルみんなのHappy",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5YJRM"
+      },
+      {
+        "materialId": "002",
+        "type": "text",
+        "label": "月1,870円から使える生活家電【家電レンタルみんなのHappy】",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5YRHE"
+      },
+      {
+        "materialId": "003",
+        "type": "text",
+        "label": "家電は買うより格安レンタル【家電レンタルみんなのHappy】",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5YZ76"
+      },
+      {
+        "materialId": "005",
+        "type": "banner",
+        "size": "300x250",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5ZEMP",
+        "imgSrc": "https://www24.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001005000&mc=1"
+      },
+      {
+        "materialId": "006",
+        "type": "banner",
+        "size": "100x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5ZMCH",
+        "imgSrc": "https://www21.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001006000&mc=1"
+      },
+      {
+        "materialId": "007",
+        "type": "banner",
+        "size": "120x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+5ZU29",
+        "imgSrc": "https://www26.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001007000&mc=1"
+      },
+      {
+        "materialId": "008",
+        "type": "banner",
+        "size": "300x250",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+601S1",
+        "imgSrc": "https://www29.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001008000&mc=1"
+      },
+      {
+        "materialId": "009",
+        "type": "banner",
+        "size": "300x250",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+609HT",
+        "imgSrc": "https://www28.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001009000&mc=1"
+      },
+      {
+        "materialId": "010",
+        "type": "banner",
+        "size": "120x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+60H7L",
+        "imgSrc": "https://www24.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001010000&mc=1"
+      },
+      {
+        "materialId": "019",
+        "type": "banner",
+        "size": "250x250",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G3W9J6+5MMG+62ENL",
+        "imgSrc": "https://www23.a8.net/svt/bgt?aid=251027041974&wid=003&eno=01&mid=s00000026260001019000&mc=1"
+      }
+    ]
   }
 }

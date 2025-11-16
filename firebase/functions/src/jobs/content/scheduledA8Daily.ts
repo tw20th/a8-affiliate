@@ -8,7 +8,7 @@ const TZ = "Asia/Tokyo";
 const db = getFirestore();
 
 // 同一オファーの再生成を抑止する日数
-const COOL_DOWN_DAYS = Number(process.env.A8_COOLDOWN_DAYS ?? 7);
+const COOL_DOWN_DAYS = Number(process.env.A8_COOLDOWN_DAYS ?? 0);
 
 async function pickOfferForSite(siteId: string): Promise<string | null> {
   // siteIds に含まれる offers から最近更新を優先
@@ -59,7 +59,7 @@ async function createA8Post(siteId: string) {
 /** 朝 06:00 … A8 1本 */
 export const scheduledBlogA8_Morning = functions
   .region(REGION)
-  .runWith({ secrets: ["OPENAI_API_KEY"] })
+  .runWith({ secrets: ["OPENAI_API_KEY", "UNSPLASH_ACCESS_KEY"] })
   .pubsub.schedule("0 6 * * *")
   .timeZone(TZ)
   .onRun(async () => {
@@ -72,7 +72,7 @@ export const scheduledBlogA8_Morning = functions
 /** 昼 12:00 … A8 1本 */
 export const scheduledBlogA8_Noon = functions
   .region(REGION)
-  .runWith({ secrets: ["OPENAI_API_KEY"] })
+  .runWith({ secrets: ["OPENAI_API_KEY", "UNSPLASH_ACCESS_KEY"] })
   .pubsub.schedule("0 12 * * *")
   .timeZone(TZ)
   .onRun(async () => {
@@ -80,4 +80,18 @@ export const scheduledBlogA8_Noon = functions
     const results = [];
     for (const siteId of siteIds) results.push(await createA8Post(siteId));
     return { results };
+  });
+
+export const runA8DailyNow = functions
+  .region(REGION)
+  .runWith({ secrets: ["OPENAI_API_KEY", "UNSPLASH_ACCESS_KEY"] })
+  .https.onRequest(async (_req, res) => {
+    try {
+      const siteIds = await getBlogEnabledSiteIds(db);
+      const results = [];
+      for (const siteId of siteIds) results.push(await createA8Post(siteId));
+      res.json({ ok: true, results });
+    } catch (e) {
+      res.status(500).json({ ok: false, error: String(e) });
+    }
   });

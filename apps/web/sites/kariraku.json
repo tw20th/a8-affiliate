@@ -3,6 +3,11 @@
   "displayName": "Kariraku（カリラク）",
   "domain": "localhost",
   "brand": { "primary": "#16a34a", "accent": "#0ea5e9", "logoUrl": "" },
-  "features": { "blogs": true, "ranking": true },
+  "features": {
+    "blogs": true,
+    "ranking": true,
+    "offers": true,
+    "products": false
+  },
   "categoryPreset": ["appliance-rental"]
 }

@@ -6,8 +6,7 @@ Thumbs.db
 !.vscode/extensions.json
 !.vscode/launch.json
 !.vscode/tasks.json
-# ↑ settings.json も共有したいなら次を追加
-# !.vscode/settings.json
+!.vscode/settings.json
 
 # --- Node / パッケージマネージャ ---
 node_modules/
@@ -81,9 +80,7 @@ inv_*.json
 firebase/functions/secrets/*
 firebase/functions/gsc_sa.json
 
-# --- A8 / ジョブ実行の作業キャッシュや投入元ファイル（公開不要なら） ---
-firebase/functions/.a8-sync-state.json
-firebase/functions/ingest/**
+
 
 # --- Turborepo / ビルドキャッシュ系（使っている場合）---
 .turbo/

@@ -2,10 +2,12 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions/v2";
 import { a8BlogSlug } from "../../lib/slug/a8.js";
+import { getSiteConfig } from "../../lib/sites/siteConfig.js";
 import { findUnsplashHero } from "../../services/unsplash/client.js";
 import { generateBlogContent } from "../../utils/generateBlogContent.js";
 import { stripPlaceholders } from "../../utils/markdown.js";
 import type { Firestore } from "firebase-admin/firestore";
+import { getSeasonalContext } from "../../utils/seasonalContext.js";
 
 /* ========= Types ========= */
 type Creative =
@@ -62,6 +64,79 @@ type ServiceLite = {
   affiliateUrl: string;
   oneLiner: string;
 };
+
+/* ========= Angle (variant) spec ========= */
+// 依存を増やさないため、このファイル内に軽量定義
+type VariantId =
+  | "case-study"
+  | "price-first"
+  | "faq-heavy"
+  | "pros-cons"
+  | "speed-setup"
+  | "safety-trust";
+
+type AngleSpec = { h1Prefix?: string; rules: string[]; modules: string[] };
+
+const ANGLES: Record<VariantId, AngleSpec> = {
+  "case-study": {
+    h1Prefix: "【実体験あり】",
+    rules: [
+      "冒頭は“誰の体験/状況/結果”を3文で",
+      "注意点と回避策を明確に",
+      "広告表記は冒頭直後に配置",
+    ],
+    modules: ["prosCons", "caution", "priceTable", "faq"],
+  },
+  "price-first": {
+    rules: [
+      "リードで料金と総額の目安を先に提示",
+      "比較表（最低3社）は必須",
+      "料金系FAQを入れる",
+    ],
+    modules: ["priceTable", "compareTable", "faq"],
+  },
+  "faq-heavy": {
+    rules: [
+      "FAQを10問前後で不安を先に潰す",
+      "途中解約/設置/故障/支払いは必ず含む",
+      "要約→詳細→FAQの順で構成",
+    ],
+    modules: ["faq", "caution", "prosCons"],
+  },
+  "pros-cons": {
+    rules: [
+      "Pros/Consは対比で3〜5項目ずつ、料金・手間・安心感など観点を分けて整理する",
+      "各項目に1文の根拠を添え、『買った方が良いケース』や『レンタルが向かないケース』にも必ず触れる",
+      "最後に向く人/向かない人を中立的にまとめ、読者が自分で選べるようにする",
+    ],
+    modules: ["prosCons", "whoFit", "faq"],
+  },
+  "speed-setup": {
+    rules: [
+      "申込み→設置→回収までのリードタイムを明記",
+      "“最短何日で使えるか”を強調",
+      "時期・地域差の注意点を入れる",
+    ],
+    modules: ["setupFlow", "faq"],
+  },
+  "safety-trust": {
+    rules: [
+      "故障対応/交換/連絡手段を明記",
+      "実例を1つ（可能な限り一般化）",
+      "“安心条件”チェックリストを入れる",
+    ],
+    modules: ["support", "caution", "faq"],
+  },
+};
+
+function angleNotes(variantId: VariantId = "pros-cons") {
+  const spec = ANGLES[variantId];
+  const h1Prefix = spec.h1Prefix ?? "";
+  const noteText =
+    `【執筆角度: ${variantId}】\n` +
+    spec.rules.map((r, i) => `- ${i + 1}. ${r}`).join("\n");
+  return { h1Prefix, noteText, modules: spec.modules };
+}
 
 /* ========= Helpers ========= */
 
@@ -252,12 +327,35 @@ function sanitizeTags(input: unknown, fallbackHints: string[] = []): string[] {
 export async function generateBlogFromOffer(opts: {
   offerId: string;
   siteId: string;
-  keyword?: string; // ★ キーワード起点
+  keyword?: string; // 検索キーワード起点（任意）
   dryRun?: boolean;
   publish?: boolean;
+  // --- ↓ 追加: 多様化のためのメタ ---
+  intent?: "service" | "compare" | "guide";
+  templateId?:
+    | "kariraku_service"
+    | "kariraku_compare"
+    | "kariraku_daily"
+    | "a8";
+  variantId?: VariantId;
+  modules?: string[]; // priceTable / compareTable / faq ... など
 }) {
-  const { offerId, siteId, keyword = "", dryRun, publish = true } = opts;
+  const {
+    offerId,
+    siteId,
+    keyword = "",
+    dryRun,
+    publish = true,
+    intent = "service",
+    templateId = "a8",
+    variantId = "pros-cons",
+    modules: modulesInput,
+  } = opts;
+
   const db = getFirestore();
+
+  // 季節・行事のコンテキスト（日本時間ベース）
+  const seasonal = getSeasonalContext();
 
   // 1) offer / program
   const offerSnap = await db.collection("offers").doc(offerId).get();
@@ -330,15 +428,27 @@ export async function generateBlogFromOffer(opts: {
   while (competitorVars.length < 2)
     competitorVars.push({ name: "他社", slug: "compare-latest" });
 
-  // 4) generate (キーワード有無で出力トーンを切替)
+  // 4) 角度（variant）に応じてプロンプトへヒント注入
+  const angle = angleNotes(variantId);
   const targetKeyword = keyword.trim();
-  const persona = targetKeyword
-    ? "検索で比較/選び方を知りたい人（購入前）"
-    : "家電は買うより借りたい時に迷っている人";
-  const pain = targetKeyword
-    ? "料金比較・選び方・口コミ・他社比較・初期費用を抑えたい"
-    : "短期だけ必要・初期費用は抑えたい・設置/回収まで任せたい";
 
+  // persona/pain を variant と keyword で調整（テンプレが使わなくても安全）
+  const persona = targetKeyword
+    ? "検索で比較や選び方を知りたい人（購入前）"
+    : "買わずに短期で使いたい人（設置/回収も任せたい）";
+
+  const painBase = [
+    "料金比較",
+    "選び方",
+    "口コミ",
+    "他社比較",
+    "初期費用を抑えたい",
+  ];
+  if (variantId === "speed-setup") painBase.unshift("最短で使いたい");
+  if (variantId === "safety-trust") painBase.unshift("故障時の安心感");
+  const pain = painBase.join("・");
+
+  // 5) generate（テンプレは既定：kariraku_service）
   const siteDisplay = "Kariraku（カリラク）";
   const {
     title: genTitle,
@@ -351,11 +461,33 @@ export async function generateBlogFromOffer(opts: {
     product: { name: serviceName, asin: offerId, tags: offer.tags ?? [] },
     persona,
     pain,
-    templateName: "blogTemplate_kariraku_service.txt",
+    templateName:
+      templateId === "a8"
+        ? "blogTemplate_a8.txt"
+        : templateId === "kariraku_compare"
+        ? "blogTemplate_kariraku_compare.txt"
+        : templateId === "kariraku_daily"
+        ? "blogTemplate_kariraku_daily.txt"
+        : "blogTemplate_kariraku_service.txt",
     vars: {
-      // 既存の service.* / competitors.* / compareSlug に加えてキーワード情報を注入
-      targetKeyword, // ← テンプレから使える（タイトル/見出しに織り込むヒント）
-      __force_sections: "比較表/選び方/おすすめ/FAQ/内部リンク/CTA",
+      // キーワード・角度ヒント
+      targetKeyword,
+      variantNote: angle.noteText,
+      __angle_rules: angle.noteText,
+      __angle_modules: (opts.modules?.length
+        ? opts.modules
+        : ANGLES[variantId].modules
+      ).join(","),
+      __force_sections:
+        "季節の背景/向いている人/向かない人/買う場合との比較/メリット/デメリット/比較表/選び方/FAQ/内部リンク/CTA",
+      // 季節・行事コンテキスト
+      seasonKeyword: seasonal.keyword,
+      seasonLabel: seasonal.label,
+      seasonContext: seasonal.description,
+      // 共通メタ
+      advertiser: program.advertiser ?? "",
+      affiliateUrl,
+      // service.*
       "service.name": serviceVars.name,
       "service.affiliateUrl": serviceVars.affiliateUrl,
       "service.officialUrl": serviceVars.officialUrl,
@@ -370,15 +502,17 @@ export async function generateBlogFromOffer(opts: {
       "service.campaignNote": serviceVars.campaignNote,
       "service.reviewSummary": serviceVars.reviewSummary,
       "service.shortId": serviceVars.shortId,
+      // competitors.*
       "competitors.0.name": competitorVars[0].name,
       "competitors.0.slug": competitorVars[0].slug,
       "competitors.1.name": competitorVars[1].name,
       "competitors.1.slug": competitorVars[1].slug,
+      // compare
       compareSlug,
     },
   });
 
-  // 5) slug（キーワードがあれば先頭に混ぜて重複を避ける）
+  // 6) slug（キーワードがあれば先頭に混ぜて重複を避ける）
   const now = Date.now();
   const titleForSlug = targetKeyword
     ? `${targetKeyword} ${genTitle || offer.title}`
@@ -391,17 +525,22 @@ export async function generateBlogFromOffer(opts: {
     return { slug, existed: true as const };
   }
 
-  // 6) 画像
-  let imageUrl: string | null =
-    offer.imageUrl ??
-    offer.heroImage ??
-    ctaBanner?.imgSrc ??
-    offer.images?.[0] ??
-    null;
+  // 7) 画像
+  const siteCfg = await getSiteConfig(siteId).catch(() => null);
+  const preferUnsplash = Boolean(siteCfg?.images?.preferUnsplashHero) || false;
+
+  let imageUrl: string | null = null;
   let imageCredit: string | null = null;
   let imageCreditLink: string | null = null;
 
-  if (!imageUrl) {
+  const offerFallback =
+    offer.imageUrl ||
+    offer.heroImage ||
+    ctaBanner?.imgSrc ||
+    offer.images?.[0] ||
+    null;
+
+  async function tryUnsplashFirst(): Promise<boolean> {
     const query = [siteId, program.advertiser, offer.title, targetKeyword]
       .filter(Boolean)
       .join(" ");
@@ -410,10 +549,22 @@ export async function generateBlogFromOffer(opts: {
       imageUrl = hero.url;
       imageCredit = hero.credit || null;
       imageCreditLink = hero.creditLink || null;
+      return true;
+    }
+    return false;
+  }
+
+  if (preferUnsplash) {
+    const ok = await tryUnsplashFirst();
+    if (!ok) imageUrl = offerFallback;
+  } else {
+    imageUrl = offerFallback;
+    if (!imageUrl) {
+      await tryUnsplashFirst();
     }
   }
 
-  // 7) 保存
+  // 8) 保存
   const cleanedContent = stripPlaceholders(content);
   const cleanedTags = sanitizeTags(
     (Array.isArray(tags) && tags.length ? tags : offer.tags) || [],
@@ -425,12 +576,15 @@ export async function generateBlogFromOffer(opts: {
     ].filter(Boolean) as string[]
   );
 
+  // タイトルに角度Prefixを付与（ある場合）
+  const finalTitle =
+    (angle.h1Prefix ? `${angle.h1Prefix}${genTitle || ""}` : genTitle) ||
+    `${offer.title}｜${program.advertiser ?? ""}`.replace(/｜$/, "");
+
   const doc = {
     slug,
     siteId,
-    title:
-      genTitle ||
-      `${offer.title}｜${program.advertiser ?? ""}`.replace(/｜$/, ""),
+    title: finalTitle,
     summary:
       excerpt ?? (offer.description ? offer.description.slice(0, 120) : null),
     content: cleanedContent,
@@ -448,7 +602,15 @@ export async function generateBlogFromOffer(opts: {
     ...(publish ? { publishedAt: now } : {}),
     views: 0,
     type: "service" as const,
-    targetKeyword: targetKeyword || null, // ★ 追記：検索キーワードを保持
+    // --- 追加保存メタ ---
+    intent,
+    templateId,
+    variantId,
+    modules:
+      modulesInput && modulesInput.length
+        ? modulesInput
+        : ANGLES[variantId].modules,
+    targetKeyword: targetKeyword || null,
   };
 
   if (dryRun) {

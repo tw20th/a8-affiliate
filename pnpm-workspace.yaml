@@ -3,3 +3,5 @@ packages:
   - "packages/*"
   - "apps/*"
   - "firebase/*"
+  - "firebase/functions" # ← これを必ず入れる
+

@@ -34,6 +34,10 @@ export {
   scheduledBlogA8_Noon,
 } from "./jobs/content/scheduledA8Daily.js";
 
+export { runA8DailyNow } from "./jobs/content/scheduledA8Daily.js";
+
+export { a8_updateOfferPrice } from "./jobs/a8/updateOfferPrice.js";
+
 // 当日分のオンページ分析（Markdownベース）
 export { scheduledAnalyzeBlogsNight } from "./jobs/content/analyzeBlog.js";
 

@@ -35,24 +35,14 @@ async function loadPainShortcodes(siteId: string): Promise<string[]> {
   ];
 }
 
-/** 記事末尾に“関連ガイド”のCTA群を付与 */
+/** 記事末尾に“関連ガイド”のCTA群を付与（現在はフロント側に任せるため何もしない） */
 export async function appendPainCTASection(
-  siteId: string,
+  _siteId: string,
   content: string
 ): Promise<string> {
-  const shorts = await loadPainShortcodes(siteId);
-  const section = [
-    "",
-    "## 関連ガイド",
-    "悩みから選べます。気になる項目をタップしてください。",
-    "",
-    ...shorts.map((s) => `- ${s}`),
-    "",
-    "> ※本ページは広告を含みます",
-    "",
-  ].join("\n");
-
-  return `${(content || "").trim()}\n\n${section}`;
+  // フロントの RelatedByTags / PainRail に任せるため、
+  // ここでは余計なセクションを付け足さない。
+  return (content || "").trim();
 }
 
 /* =========================================================

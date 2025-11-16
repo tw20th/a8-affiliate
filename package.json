@@ -8,7 +8,10 @@
     "lint": "eslint .",
     "prepare:functions": "pnpm -C packages/shared-types build && pnpm -C firebase run sync:types",
     "dev:functions": "pnpm run prepare:functions && pnpm -C firebase/functions serve",
-    "emulators": "pnpm run prepare:functions && pnpm -C firebase emulators"
+    "emulators": "pnpm run prepare:functions && pnpm -C firebase emulators",
+    "a8:sync": "pnpm -C firebase/functions exec tsx src/jobs/a8/ingestFromFiles.ts",
+    "a8:norm": "pnpm -C firebase/functions exec tsx src/jobs/a8/normalizeA8Offers.ts",
+    "a8:ui": "pnpm -C firebase/functions exec tsx src/jobs/a8/seedUiFromIngest.ts"
   },
   "devDependencies": {
     "@types/node": "^24.9.1",
@@ -22,6 +25,7 @@
     "node": "20.x"
   },
   "dependencies": {
-    "@google-cloud/tasks": "^6.2.1"
+    "@google-cloud/tasks": "^6.2.1",
+    "firebase-admin": "^12.5.0"
   }
 }

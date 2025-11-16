@@ -3,6 +3,7 @@ import type { Product } from "@affiscope/shared-types";
 import {
   fsGet,
   fsRunQuery,
+  fsDecode,
   fsGetString as vStr,
   fsGetNumber as vNum,
   fsGetStringArray as vStrArr,
@@ -10,39 +11,69 @@ import {
   docIdFromName,
 } from "@/lib/firestore-rest";
 
-// 既存の import 群はそのまま。下を追加してください。
-export type BlogSummary = {
-  slug: string;
+/* =========================
+ * 共通で使う最小データ型
+ * ========================= */
+
+export type RelatedItem = {
+  /** 内部リンクで使うID or slug（どちらでも） */
+  id?: string;
+  slug?: string;
+  /** 表示タイトル */
   title: string;
-  summary?: string;
+  /** サムネイル（任意） */
+  img?: string | null;
+  /** バッジ等（任意） */
+  badge?: string | null;
+  /** 一部のカードで使う説明（任意） */
+  summary?: string | null;
+  /** 外部/内部 どちらでも使える汎用href（任意） */
+  href?: string;
+
+  /** ↓ブログ側で並べ替えに使うことがあるので任意で保持 */
   updatedAt?: number;
   tags?: string[];
 };
 
-/** タグ連動の関連記事（ARRAY_CONTAINS をタグごとに回す版） */
+/* ===== offers (minimum shape when needed elsewhere) ===== */
+export type OfferLite = {
+  id: string;
+  title: string;
+  affiliateUrl: string;
+  badges: string[];
+  priceMonthly?: number | null;
+  minTermMonths?: number | null;
+  notes?: string[];
+};
+
+/* =========================
+ * blogs: タグ関連記事
+ * ========================= */
+
+/** タグごとに ARRAY_CONTAINS で収集 → 重複除去 → 更新日の降順で切り出し */
 export async function fetchRelatedBlogsByTags(
   siteId: string,
   tags: readonly string[] = [],
   excludeSlug: string,
   limit = 3
-): Promise<BlogSummary[]> {
+): Promise<RelatedItem[]> {
   if (!tags.length) return [];
 
   const seen = new Set<string>();
-  const picked: BlogSummary[] = [];
+  const picked: RelatedItem[] = [];
 
-  for (const tag of tags.slice(0, 10)) {
+  for (const tag of [...new Set(tags)].slice(0, 10)) {
     if (picked.length >= limit + 2) break;
 
     const docs = await fsRunQuery({
       collection: "blogs",
       where: [
         { field: "siteId", value: siteId },
-        { field: "visibility", value: "public" },
-        { field: "tags", op: "ARRAY_CONTAINS", value: tag }, // ★ ここがポイント
+        { field: "status", value: "published" },
+        { field: "tags", op: "ARRAY_CONTAINS", value: tag },
       ],
       orderBy: [{ field: "updatedAt", direction: "DESCENDING" as const }],
-      limit: limit + 2,
+      limit: limit + 4,
     }).catch(() => [] as any[]);
 
     for (const d of docs) {
@@ -59,6 +90,87 @@ export async function fetchRelatedBlogsByTags(
       });
       seen.add(slug);
 
+      if (picked.length >= limit + 4) break;
+    }
+  }
+
+  picked.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+  return picked.slice(0, limit);
+}
+
+/* =========================
+ * offers: タグ関連記事（同タグの他社）
+ * ========================= */
+
+// 置換対象: fetchRelatedOffersByTags 全体をこの実装に差し替え
+export async function fetchRelatedOffersByTags(
+  siteId: string,
+  tags: readonly string[] = [],
+  excludeId: string,
+  limit = 3
+): Promise<RelatedItem[]> {
+  if (!tags.length) return [];
+
+  const seen = new Set<string>();
+  const picked: RelatedItem[] = [];
+
+  // Firestore 1回分（orderBy あり → 失敗したらなし）
+  const queryOffers = async (where: any[], useOrderBy: boolean) => {
+    return await fsRunQuery({
+      collection: "offers",
+      where,
+      orderBy: useOrderBy
+        ? [{ field: "updatedAt", direction: "DESCENDING" as const }]
+        : [],
+      limit: limit + 4,
+    }).catch(() => [] as any[]);
+  };
+
+  for (const tag of [...new Set(tags)].slice(0, 8)) {
+    if (picked.length >= limit + 2) break;
+
+    // Firestore 側は tags のみ（ARRAY_CONTAINS は1つに制限）
+    const where = [
+      { field: "archived", value: false },
+      { field: "tags", op: "ARRAY_CONTAINS", value: tag },
+    ];
+
+    let docs = await queryOffers(where, true);
+
+    // インデックス未作成で落ちた場合のフォールバック（orderBy なし）
+    if (!docs.length) {
+      docs = await queryOffers(where, false);
+    }
+
+    for (const d of docs) {
+      const f = d.fields as Record<string, any>;
+
+      // ← siteIds はクライアントで絞り込み（配列 or 文字列に対応）
+      const siteIds = (fsDecode(f?.siteIds) as any[]) ?? [];
+      if (siteId && Array.isArray(siteIds) && siteIds.length > 0) {
+        if (!siteIds.includes(siteId)) continue;
+      }
+
+      const id =
+        (fsDecode(f?.id) as string) ??
+        d.name?.split("/").pop()?.toString() ??
+        "";
+      if (!id || id === excludeId || seen.has(id)) continue;
+
+      const title = (fsDecode(f?.title) as string) ?? "(no title)";
+      const creatives = (fsDecode(f?.creatives) as any[]) ?? [];
+      const banner = creatives.find(
+        (c) => c?.type === "banner" && (c?.imgSrc || c?.size)
+      );
+      const img = banner?.imgSrc || (vStrArr(f, "images")?.[0] ?? null);
+      const href =
+        (fsDecode(f?.affiliateUrl) as string) ||
+        (fsDecode(f?.landingUrl) as string) ||
+        undefined;
+      const badge = vStrArr(f, "badges")?.[0] ?? null;
+
+      picked.push({ id, title, img, badge, href });
+      seen.add(id);
       if (picked.length >= limit + 2) break;
     }
   }
@@ -66,7 +178,9 @@ export async function fetchRelatedBlogsByTags(
   return picked.slice(0, limit);
 }
 
-/* ===== products ===== */
+/* =========================
+ * products
+ * ========================= */
 
 export async function fetchProductByAsin(
   asin: string,
@@ -173,7 +287,7 @@ export async function fetchRelated(
   return rows.filter((p) => p.asin !== excludeAsin).slice(0, limit);
 }
 
-/* 関連ブログ（この商品を題材にしている記事） */
+/** この商品を題材にしたブログ（関連CTA用） */
 export type MiniBlog = {
   slug: string;
   title: string;
@@ -189,7 +303,7 @@ export async function fetchBlogsByRelatedAsin(
     collection: "blogs",
     where: [
       { field: "siteId", value: siteId },
-      { field: "relatedAsin", value: asin }, // EQUAL
+      { field: "relatedAsin", value: asin },
       { field: "status", value: "published" },
     ],
     orderBy: [{ field: "publishedAt", direction: "DESCENDING" as const }],
@@ -203,17 +317,17 @@ export async function fetchBlogsByRelatedAsin(
   }));
 }
 
-/* ===== blogs ===== */
+/* =========================
+ * blogs: 一覧/詳細
+ * ========================= */
 
 export type BlogRow = {
   slug: string;
   title: string;
   summary?: string | null;
   imageUrl?: string | null;
-  /** ★ 追加: Unsplash 帰属 */
   imageCredit?: string | null;
   imageCreditLink?: string | null;
-
   publishedAt?: number;
   updatedAt?: number;
   views?: number;
@@ -239,8 +353,8 @@ export async function fetchBlogs(
     title: vStr(d.fields, "title") ?? "(no title)",
     summary: vStr(d.fields, "summary") ?? null,
     imageUrl: vStr(d.fields, "imageUrl") ?? null,
-    imageCredit: vStr(d.fields, "imageCredit") ?? null, // ★ 追加
-    imageCreditLink: vStr(d.fields, "imageCreditLink") ?? null, // ★ 追加
+    imageCredit: vStr(d.fields, "imageCredit") ?? null,
+    imageCreditLink: vStr(d.fields, "imageCreditLink") ?? null,
     publishedAt: vNum(d.fields, "publishedAt") ?? undefined,
     updatedAt: vNum(d.fields, "updatedAt") ?? undefined,
     views: vNum(d.fields, "views") ?? 0,
@@ -282,13 +396,12 @@ export async function fetchBlogBySlug(slug: string) {
     relatedAsin: vStr(f, "relatedAsin") ?? null,
     imageCredit: vStr(f, "imageCredit") ?? null,
     imageCreditLink: vStr(f, "imageCreditLink") ?? null,
-    /** ★ 追加：関連記事抽出に使う */
     tags: vStrArr(f, "tags") ?? [],
   };
 }
 
+/** ブログCTA用：関連商品の最安値だけ素早く取得 */
 export async function fetchBestPrice(asin: string) {
-  // コロン等を含むIDに対応
   const doc = await fsGet({
     path: `products/${encodeURIComponent(asin)}`,
   }).catch(() => null);

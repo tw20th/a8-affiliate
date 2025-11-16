@@ -1,4 +1,3 @@
-// 例: apps/web/components/common/AffiliateLink.tsx
 "use client";
 import { gaEvent } from "@/lib/gtag";
 import { useMemo } from "react";

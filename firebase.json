@@ -1,11 +1,26 @@
 {
   "functions": {
     "predeploy": ["pnpm -C firebase/functions run predeploy:functions"],
-    "source": "firebase/functions"
+    "source": "firebase/functions",
+    "runtime": "nodejs20",
+    "environmentVariables": {
+      "A8_COOLDOWN_DAYS": "7",
+      "FUNCTIONS_REGION": "asia-northeast1"
+    }
   },
   "hosting": {
     "public": "apps/web/out",
     "ignore": ["**/.*", "**/node_modules/**"],
     "rewrites": [{ "source": "/trackClick", "function": "trackClick" }]
+  },
+  "firestore": {
+    "rules": "firebase/firestore.rules",
+    "indexes": "firebase/firestore.indexes.json"
+  },
+  "emulators": {
+    "functions": { "host": "127.0.0.1", "port": 5001 },
+    "firestore": { "port": 8080 },
+    "storage": { "port": 9199 },
+    "ui": { "enabled": true }
   }
 }

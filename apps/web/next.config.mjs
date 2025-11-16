@@ -1,21 +1,25 @@
-// apps/web/next.config.mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    // 外部画像ホストを列挙（Amazon / 楽天 / Unsplash）
     remotePatterns: [
       { protocol: "https", hostname: "m.media-amazon.com" },
       { protocol: "https", hostname: "thumbnail.image.rakuten.co.jp" },
       { protocol: "https", hostname: "image.rakuten.co.jp" },
       { protocol: "https", hostname: "shop.r10s.jp" },
-      // ▼ 追加：Unsplash
       { protocol: "https", hostname: "images.unsplash.com" },
-      // A8（サーバが www27/28 など可変なのでワイルドカードで）
       { protocol: "https", hostname: "**.a8.net" },
+      { protocol: "https", hostname: "img-af.a8.net" },
+      { protocol: "https", hostname: "stat.a8.net" },
+      { protocol: "https", hostname: "img.afimg.jp" },
     ],
     formats: ["image/avif", "image/webp"],
   },
   reactStrictMode: true,
+  async redirects() {
+    return [
+      { source: "/products", destination: "/offers", permanent: true },
+      { source: "/products/:path*", destination: "/offers", permanent: true },
+    ];
+  },
 };
-
 export default nextConfig;

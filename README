@@ -35,3 +35,24 @@ a8の商品を追加するときはこのファイルを実行する。
 
 firebase/functions/src/scripts/tools/syncA8FromFiles.ts
 
+
+ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+
+firebase/functions/src/jobs/a8/ingestFromFiles.tsはdataの内容をfiresotreに書く。
+
+
+firebase/functions/src/jobs/a8/seedUiFromIngest.tsはingestされた内容をUI用に整形して書く。
+
+ーーーーーーーーーーーーーーーーーーーーーーーーー
+重要！企業の情報を追加して
+pnpm -C firebase/functions run a8:sync
+↑
+（JSON → Firestore）
+
+
+pnpm -C firebase/functions run normalizeA8
+↑
+（UI用に整形）
+
+ーーーーーーーーーーーーーーーーーーーーーーーーーーー
+

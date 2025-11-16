@@ -1,4 +1,5 @@
 // apps/web/utils/markdown.ts
+
 /**
  * 記事テキストのクイック整形
  * - 先頭/末尾の ```markdown フェンスを剥がす
@@ -6,7 +7,9 @@
  * - [広告バナー](url "…") も CTA に
  * - A8系の画像(![](...))を全面除去
  * - ・ を Markdown 箇条書きに / 全角番号リスト→半角に
- * - 連続空行圧縮
+ * - 壊れたテーブル区切り行を削除
+ * - [[pain tag="..." text="..."]] を :::pain[...] に変換
+ * - 連続空行圧縮 など
  */
 export function normalizeBlogMarkdown(src: string): string {
   let s = src ?? "";
@@ -46,6 +49,16 @@ export function normalizeBlogMarkdown(src: string): string {
     return half;
   });
 
+  // 壊れたテーブルの区切り行だけが残っているケースを削除
+  // 例: |---|---:|---:|---|---|
+  s = s.replace(/^\|(?:\s*:?-{3,}:?\s*\|)+\s*$/gm, "");
+
+  // [[pain tag="腰痛" text="腰の負担を減らす椅子を探す"]] → :::pain[腰の負担を減らす椅子を探す](腰痛)
+  s = s.replace(
+    /\[\[\s*pain\s+tag="([^"]+)"\s+text="([^"]+)"\s*\]\]/gi,
+    (_m, tag: string, text: string) => `\n\n:::pain[${text}](${tag})\n\n`
+  );
+
   // 余分な空行を圧縮
   s = s.replace(/\n{3,}/g, "\n\n");
 
@@ -55,7 +68,10 @@ export function normalizeBlogMarkdown(src: string): string {
   // 不完全な CTA 残骸（例: ":::cta公式サイトへ" / ":::cta" だけの行）を除去
   s = s.replace(/^\s*:::+\s*cta[^\[\(]*$/gim, "");
 
-  // もし ":::cta ラベル (URL)" のようなスペース区切りが来たら救済（まれに発生）
+  // 不完全な pain 残骸も除去
+  s = s.replace(/^\s*:::+\s*pain[^\[\(]*$/gim, "");
+
+  // もし ":::cta ラベル (URL)" のようなスペース区切りが来たら救済
   s = s.replace(
     /^\s*:::+\s*cta\s+([^\(\[\r\n]+?)\s*\(\s*(https?:\/\/[^\s)]+)\s*\)\s*$/gim,
     (_m, label: string, url: string) =>

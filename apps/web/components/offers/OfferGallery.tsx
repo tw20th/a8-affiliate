@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import { fetchCollection } from "@/lib/firestore-rest";
 import Link from "next/link";
@@ -20,6 +20,23 @@ type Offer = {
   updatedAt?: number;
 };
 
+function sendClick(payload: Record<string, any>) {
+  try {
+    const blob = new Blob([JSON.stringify(payload)], {
+      type: "application/json",
+    });
+    if (typeof navigator !== "undefined" && "sendBeacon" in navigator) {
+      navigator.sendBeacon("/api/track", blob);
+    } else {
+      fetch("/api/track", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    }
+  } catch {}
+}
+
 export default function OfferGallery(props: {
   siteId: string;
   variant?: "grid" | "list" | "hero";
@@ -28,6 +45,12 @@ export default function OfferGallery(props: {
   const { siteId, variant = "grid", limit = 24 } = props;
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // siteId を ref に保持（useCallback の依存から外すため）
+  const siteIdRef = useRef(siteId);
+  useEffect(() => {
+    siteIdRef.current = siteId;
+  }, [siteId]);
 
   useEffect(() => {
     (async () => {
@@ -45,6 +68,20 @@ export default function OfferGallery(props: {
       setLoading(false);
     })();
   }, [siteId, limit]);
+
+  // ★ ここを「早期 return より前」に移動
+  const makeFireClick = useCallback(
+    (offerId: string) => (where: string, href: string) =>
+      sendClick({
+        type: "offer_click",
+        siteId: siteIdRef.current,
+        offerId,
+        href,
+        where,
+        ts: Date.now(),
+      }),
+    []
+  );
 
   if (loading) return <div className="p-6">読み込み中…</div>;
   if (!offers.length)
@@ -72,60 +109,116 @@ export default function OfferGallery(props: {
     />
   );
 
-  const renderCTA = (o: Offer) => {
-    const banner = o.creatives?.find((c) => c.type === "banner");
-    const text = o.creatives?.find((c) => c.type === "text");
-    if (banner?.href)
-      return (
-        <a
-          href={banner.href}
-          rel="nofollow sponsored"
-          target="_blank"
-          className="btn btn-brand"
-        >
-          公式で詳しく見る
-        </a>
-      );
-    if (text?.href)
-      return (
-        <a
-          href={text.href}
-          rel="nofollow sponsored"
-          target="_blank"
-          className="btn btn-ghost"
-        >
-          {text.label ?? "公式で詳しく見る"}
-        </a>
-      );
-    return null;
+  const RenderImage = ({
+    src,
+    alt,
+    width,
+    height,
+    className,
+  }: {
+    src: string;
+    alt: string;
+    width: number;
+    height: number;
+    className?: string;
+  }) => {
+    const isA8 = /(?:^|\.)a8\.net\//.test(src);
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        className={className}
+        unoptimized={isA8}
+      />
+    );
   };
 
   const Card = ({ o }: { o: Offer }) => {
     const banner = o.creatives?.find((c) => c.type === "banner");
     const text = o.creatives?.find((c) => c.type === "text");
     const hero = banner?.imgSrc ?? o.images?.[0];
+    const fireClick = makeFireClick(o.id);
+    const ctaHref = banner?.href ?? text?.href;
+    const ui = (o as any).ui as
+      | { priceLabel?: string; minTermLabel?: string; isPriceDynamic?: boolean }
+      | undefined;
+
     return (
       <article className="card p-4">
         {hero ? (
-          <Link href={`/offers/${o.id}`} className="block">
-            <RenderImg
+          <a
+            href={ctaHref || `/offers/${o.id}`}
+            target={ctaHref ? "_blank" : undefined}
+            rel={ctaHref ? "nofollow sponsored" : undefined}
+            className="block"
+            onClick={() => fireClick("gallery_card_image", ctaHref || "")}
+          >
+            <RenderImage
               src={hero}
               alt={o.title}
               width={600}
               height={400}
               className="img-soft w-full mb-3 h-auto"
             />
-          </Link>
+          </a>
         ) : null}
+
         <h3 className="text-[15px] md:text-base font-semibold text-gray-800 leading-snug mb-1">
-          {o.title}
+          <Link href={`/offers/${o.id}`} className="hover:underline">
+            {o.title}
+          </Link>
         </h3>
+
         {o.description && (
           <p className="text-sm text-gray-600 line-clamp-3 mb-3">
             {o.description}
           </p>
         )}
-        <div>{renderCTA(o)}</div>
+        {/* 目安価格・最低期間 */}
+        {(ui?.priceLabel || ui?.minTermLabel) && (
+          <div className="mb-3 text-sm text-gray-700">
+            {ui?.priceLabel && (
+              <div>
+                <span className="font-medium">{ui.priceLabel}</span>
+                {ui?.isPriceDynamic ? (
+                  <span className="ml-1 text-xs text-gray-500">
+                    （目安・最新は公式）
+                  </span>
+                ) : null}
+              </div>
+            )}
+            {ui?.minTermLabel && (
+              <div className="text-xs text-gray-600">{ui.minTermLabel}</div>
+            )}
+          </div>
+        )}
+
+        <div>
+          {banner?.href && (
+            <a
+              href={banner.href}
+              rel="nofollow sponsored"
+              target="_blank"
+              className="btn btn-brand"
+              onClick={() => fireClick("gallery_card_cta", banner.href)}
+            >
+              公式で詳しく見る
+            </a>
+          )}
+          {!banner?.href && text?.href && (
+            <a
+              href={text.href}
+              rel="nofollow sponsored"
+              target="_blank"
+              className="btn btn-ghost"
+              onClick={() => fireClick("gallery_card_cta", text.href!)}
+            >
+              {text.label ?? "公式で詳しく見る"}
+            </a>
+          )}
+        </div>
       </article>
     );
   };
@@ -141,16 +234,13 @@ export default function OfferGallery(props: {
           const banner = o.creatives?.find((c) => c.type === "banner");
           const text = o.creatives?.find((c) => c.type === "text");
           const hero = banner?.imgSrc ?? o.images?.[0];
+          const href = banner?.href ?? text?.href;
           return (
             <div key={o.id} className="card p-4 flex gap-4">
               {hero && (
                 <div className="w-40 shrink-0">
-                  {banner?.href || text?.href ? (
-                    <a
-                      href={(banner?.href ?? text?.href)!}
-                      rel="nofollow sponsored"
-                      target="_blank"
-                    >
+                  {href ? (
+                    <a href={href} rel="nofollow sponsored" target="_blank">
                       <RenderImg
                         src={hero}
                         alt={o.title}
@@ -179,7 +269,27 @@ export default function OfferGallery(props: {
                 {o.description && (
                   <p className="mt-1 text-sm text-gray-600">{o.description}</p>
                 )}
-                <div className="mt-2">{renderCTA(o)}</div>
+                <div className="mt-2">
+                  {banner?.href ? (
+                    <a
+                      href={banner.href}
+                      rel="nofollow sponsored"
+                      target="_blank"
+                      className="btn btn-brand"
+                    >
+                      公式で詳しく見る
+                    </a>
+                  ) : text?.href ? (
+                    <a
+                      href={text.href}
+                      rel="nofollow sponsored"
+                      target="_blank"
+                      className="btn btn-ghost"
+                    >
+                      {text.label ?? "公式で詳しく見る"}
+                    </a>
+                  ) : null}
+                </div>
               </div>
             </div>
           );

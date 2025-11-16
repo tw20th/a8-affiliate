@@ -41,8 +41,11 @@ async function fetchRows(sc: any, siteUrl: string, days = 28) {
       endDate: end,
       dimensions: ["QUERY"],
       rowLimit: 1000,
+      searchType: "web",
+      dataState: "all", // ★未確定分も含める
     },
   });
+
   const pRes = await sc.searchanalytics.query({
     siteUrl,
     requestBody: {
@@ -50,9 +53,10 @@ async function fetchRows(sc: any, siteUrl: string, days = 28) {
       endDate: end,
       dimensions: ["PAGE", "QUERY"],
       rowLimit: 25000,
+      searchType: "web",
+      dataState: "all", // ★未確定分も含める
     },
   });
-
   const rowsQ: QueryRow[] = (qRes.data.rows || [])
     .map(
       (r: any): QueryRow => ({

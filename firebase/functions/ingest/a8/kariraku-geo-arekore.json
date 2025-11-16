@@ -1,0 +1,313 @@
+{
+  "program": {
+    "advertiserInfo": {
+      "companyName": "株式会社ゲオ",
+      "officialName": "株式会社ゲオ（GEO Holdings）",
+      "founded": "1989年1月",
+      "headquarters": "愛知県名古屋市中区富士見町8番8号",
+      "capital": "100百万円（1億円）",
+      "employees": "連結：5,000名以上（グループ全体）",
+      "businessAreas": [
+        "レンタル事業（DVD・CD・家電・カメラなど）",
+        "リユース事業",
+        "スマートフォン修理・中古販売",
+        "オンラインレンタルサービス"
+      ],
+      "strengths": [
+        "全国に1,000店舗以上のネットワーク",
+        "レンタル・中古販売のデータと運用ノウハウが豊富",
+        "短期・長期・買えるレンタルなど選択肢が多い",
+        "往復送料無料やコンビニ返却で“借りやすさ”が強い"
+      ],
+      "officialUrls": {
+        "company": "https://www.geonet.co.jp/",
+        "service": "https://geo-arekore.jp/",
+        "recruit": "https://www.geonet.co.jp/recruit/",
+        "ir": "https://www.geonet.co.jp/ir/"
+      },
+      "socials": {
+        "x": "https://twitter.com/geo_official",
+        "instagram": "https://www.instagram.com/geo_official/",
+        "youtube": "https://www.youtube.com/@GEOChannel"
+      }
+    },
+    "programId": "s00000023591001",
+    "advertiser": "株式会社ゲオ",
+    "category": ["家電", "レンタル"]
+  },
+  "offer": {
+    "id": "s00000023591001:geo-arekore",
+    "title": "カメラ・スマホ・家電を手軽にレンタル！【ゲオあれこれレンタル】",
+    "description": "ネットで注文→自宅に届く。返却はコンビニOK。短期(2泊3日〜)、月額、買えるレンタル対応。",
+    "planType": "subscription",
+    "landingUrl": "https://geo-arekore.jp/",
+    "affiliateUrl": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+5Z6WY",
+    "images": [],
+    "badges": [
+      "短期レンタル",
+      "月額レンタル",
+      "買えるレンタル",
+      "コンビニ返却OK",
+      "往復送料無料*"
+    ],
+    "tags": [
+      "レンタル",
+      "カメラ",
+      "スマホ",
+      "PC",
+      "家電",
+      "美容家電",
+      "掃除機",
+      "スーツケース"
+    ],
+    "siteIds": ["kariraku"],
+    "extras": {
+      "pricing": {
+        "plan": "both",
+        "monthlyPriceFrom": 3490,
+        "shortBase": { "days": 4, "priceFrom": 4020 },
+        "extendPerDayExample": 600,
+        "priceIsDynamic": true,
+        "priceLastChecked": 1731225600000
+      },
+      "ui": {
+        "priceLabel": "月額 3,490円〜",
+        "minTermLabel": "短期 2泊3日〜 / 月額1ヶ月〜",
+        "isPriceDynamic": true,
+        "compareHighlight": "短期レンタルで家電・カメラをすぐ使える"
+      },
+      "minTerm": { "shortDays": 2, "monthlyMonths": 1 },
+      "payment": {
+        "methods": ["クレジットカード"],
+        "cardBrands": ["VISA", "JCB", "MasterCard", "AMEX", "Diners"],
+        "threeDSecure": true,
+        "notes": [
+          "デビット/プリペイド/海外発行カードは不可",
+          "3Dセキュア（本人認証）必須"
+        ],
+        "timing": {
+          "shortRentalCharge": "出荷時に請求",
+          "extensionCharge": "返却確認後に請求",
+          "monthlyCharge": "毎月の更新日に請求"
+        },
+        "billingFailure": "カード再登録の案内。期日未決済は回収委託の可能性あり"
+      },
+      "shipping": {
+        "carrier": "ヤマト運輸",
+        "roundTripFree": true,
+        "exceptions": { "北海道": 800, "沖縄県": 1500 },
+        "returnLabelIncluded": true,
+        "returnMethods": ["コンビニ返却", "営業所/取次店", "集荷依頼可"],
+        "packagingNote": "届いた箱と緩衝材を保管し再利用。無い場合は自前で用意"
+      },
+      "warranty": {
+        "normalWearFree": true,
+        "repairCapYen": 2000,
+        "lostTheftMax": "販売価格の100％",
+        "notes": [
+          "初期不良は迅速対応",
+          "動作不良・破損時はマイページから連絡",
+          "程度により一部負担の可能性あり",
+          "人物画像の転載不可（A8規約）"
+        ]
+      },
+      "policies": {
+        "disclosureRequired": true,
+        "prLabelRequired": true,
+        "listingAdsNG": true
+      },
+      "faqHints": [
+        "短期は終了日の翌日 正午12時までに発送（自動延長/日割）",
+        "延長は最大30泊31日まで（対象外あり）",
+        "月額は毎月自動更新・前日までに解約／更新日正午までに返送"
+      ],
+      "rentalPolicy": {
+        "short": {
+          "extensionMaxNights": 31,
+          "extensionRule": "終了日の翌日から日割りで加算"
+        },
+        "monthly": {
+          "renewal": "開始日と同日が更新日",
+          "charge": "更新日に自動請求",
+          "cancel": "前日までに手続き、更新日正午までに発送"
+        },
+        "changesAfterOrder": "確定後の短縮は不可。延長は自動延長で対応"
+      },
+      "rentalKinds": ["短期レンタル", "月額レンタル", "買えるレンタル"],
+      "genres": [
+        "双眼鏡",
+        "タブレット",
+        "パソコン",
+        "周辺機器",
+        "スマートフォン",
+        "Apple Watch",
+        "スマートウォッチ・ウェアラブル",
+        "カメラ",
+        "オーディオ・映像機器",
+        "スーツケース",
+        "生活家電・用品",
+        "キッチン家電・用品",
+        "掃除機・用品",
+        "ヘルスケア",
+        "美容家電",
+        "アウトドア・キャンプ用品",
+        "DIY・工具",
+        "ビジネス・学習",
+        "望遠鏡・顕微鏡",
+        "おもちゃ・ベビー・ホビー",
+        "その他"
+      ],
+      "rankingSamples": [
+        {
+          "title": "【12倍】ビクセン 防振双眼鏡 ATERAⅡ H12x30",
+          "minTermText": "2泊3日〜",
+          "priceText": "4,990円(税込) ※目安"
+        },
+        {
+          "title": "SONY 4K対応ビデオカメラ FDR-AX45A",
+          "minTermText": "4泊5日〜",
+          "priceText": "6,490円(税込) ※目安"
+        },
+        {
+          "title": "iPhone13 128GB",
+          "minTermText": "月額のみ",
+          "priceText": "月額 5,490円(税込) ※目安"
+        }
+      ],
+      "guideLinks": {
+        "payment": "https://geo-arekore.jp/guide/payment",
+        "shipping": "https://geo-arekore.jp/guide/shipping",
+        "warranty": "https://geo-arekore.jp/guide/warranty",
+        "faq": "https://geo-arekore.jp/guide/faq"
+      }
+    },
+    "creatives": [
+      {
+        "materialId": "004",
+        "type": "text",
+        "label": "家電を手軽にレンタル！ゲオあれこれレンタル",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+5Z6WY"
+      },
+      {
+        "materialId": "003",
+        "type": "text",
+        "label": "【ゲオあれこれレンタル】 カメラや家電製品、スマホやPCなどのレンタルサービスです☆",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+5YZ77"
+      },
+      {
+        "materialId": "017",
+        "type": "banner",
+        "size": "120x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+61Z81",
+        "imgSrc": "https://www21.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001017000&mc=1"
+      },
+      {
+        "materialId": "016",
+        "type": "banner",
+        "size": "120x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+61RI9",
+        "imgSrc": "https://www26.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001016000&mc=1"
+      },
+      {
+        "materialId": "012",
+        "type": "banner",
+        "size": "300x250",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+60WN5",
+        "imgSrc": "https://www28.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001012000&mc=1"
+      },
+      {
+        "materialId": "001",
+        "type": "text",
+        "label": "ゲオあれこれレンタル",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+5YJRM"
+      },
+      {
+        "materialId": "013",
+        "type": "banner",
+        "size": "300x250",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+614CX",
+        "imgSrc": "https://www26.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001013000&mc=1"
+      },
+      {
+        "materialId": "008",
+        "type": "banner",
+        "size": "468x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+601S1",
+        "imgSrc": "https://www21.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001008000&mc=1"
+      },
+      {
+        "materialId": "014",
+        "type": "banner",
+        "size": "234x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+61C2P",
+        "imgSrc": "https://www22.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001014000&mc=1"
+      },
+      {
+        "materialId": "009",
+        "type": "banner",
+        "size": "468x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+609HT",
+        "imgSrc": "https://www29.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001009000&mc=1"
+      },
+      {
+        "materialId": "005",
+        "type": "text",
+        "label": "ゲオあれこれレンタル／注文〜返却まで初心者もカンタン",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+5ZEMQ"
+      },
+      {
+        "materialId": "006",
+        "type": "text",
+        "label": "ネットで注文、自宅までお届け。ゲオあれこれレンタル",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+5ZMCI"
+      },
+      {
+        "materialId": "002",
+        "type": "text",
+        "label": "ゲオあれこれレンタル　話題の商品をお得にレンタル",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+5YRHE"
+      },
+      {
+        "materialId": "010",
+        "type": "banner",
+        "size": "320x50",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+60H7L",
+        "imgSrc": "https://www23.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001010000&mc=1"
+      },
+      {
+        "materialId": "011",
+        "type": "banner",
+        "size": "320x50",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+60OXD",
+        "imgSrc": "https://www23.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001011000&mc=1"
+      },
+      {
+        "materialId": "015",
+        "type": "banner",
+        "size": "234x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+61JSH",
+        "imgSrc": "https://www22.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001015000&mc=1"
+      },
+      {
+        "materialId": "018",
+        "type": "banner",
+        "size": "100x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+626XT",
+        "imgSrc": "https://www24.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001018000&mc=1"
+      },
+      {
+        "materialId": "019",
+        "type": "banner",
+        "size": "100x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+62ENL",
+        "imgSrc": "https://www28.a8.net/svt/bgt?aid=251027041976&wid=003&eno=01&mid=s00000023591001019000&mc=1"
+      },
+      {
+        "materialId": "007",
+        "type": "text",
+        "label": "☆買う前にレンタルで試す☆【ゲオあれこれレンタル】",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GDPD+G534QQ+5212+5ZU2B"
+      }
+    ]
+  }
+}

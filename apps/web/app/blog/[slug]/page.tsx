@@ -12,6 +12,8 @@ import { normalizeBlogMarkdown, extractToc, isA8Url } from "@/utils/markdown";
 import RelatedByTags from "@/components/blog/RelatedByTags";
 import TrackBlog from "@/components/analytics/TrackBlog";
 import CtaLink from "@/components/analytics/CtaLink";
+import { fetchRelatedBlogsByTags } from "@/lib/queries";
+import TrackLink from "@/components/common/TrackLink";
 
 export const revalidate = 3600;
 export const dynamic = "force-dynamic";

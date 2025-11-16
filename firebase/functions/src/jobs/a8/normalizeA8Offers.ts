@@ -1,14 +1,53 @@
+// firebase/functions/src/jobs/a8/normalizeA8Offers.ts
 import { getFirestore } from "firebase-admin/firestore";
 
-type Options = {
-  siteId?: string; // ← 追加：HTTP側から受ける
-};
+type Options = { siteId?: string };
 
+// タイトルからデフォルトsiteIds決定（未指定時の保険）
 function decideSitesByTitle(title: string): string[] {
   const t = (title || "").toLowerCase();
   const sites: string[] = [];
   if (/(冷蔵|洗濯|レンタル|サブスク)/.test(t)) sites.push("homeease");
   return sites.length ? sites : ["homeease"];
+}
+
+/* ---- 派生フィールド（UI表示用） ---- */
+function buildPriceLabel(o: any): string | null {
+  const p = o?.extras?.pricing;
+  if (!p) return null;
+
+  // 月額 or 短期のどちらか（両対応なら月額を優先）
+  if (
+    (p.plan === "monthly" || p.plan === "both") &&
+    typeof p.monthlyPriceFrom === "number"
+  ) {
+    return `月額 ${p.monthlyPriceFrom.toLocaleString()}円〜`;
+  }
+
+  if (
+    (p.plan === "short" || p.plan === "both" || p.plan === "rental") &&
+    typeof p?.shortBase?.priceFrom === "number"
+  ) {
+    const d = Number(p?.shortBase?.days ?? 2);
+    return `${d}泊${d + 1}日 ${p.shortBase.priceFrom.toLocaleString()}円〜`;
+  }
+
+  return null;
+}
+
+function buildMinTermLabel(o: any): string | null {
+  const m = o?.extras?.minTerm || {};
+  const a: string[] = [];
+
+  if (typeof m.shortDays === "number") {
+    a.push(`短期 ${m.shortDays}泊${m.shortDays + 1}日〜`);
+  }
+
+  if (typeof m.monthlyMonths === "number") {
+    a.push(`月額 ${m.monthlyMonths}ヶ月〜`);
+  }
+
+  return a.join(" / ") || null;
 }
 
 export async function normalizeA8Offers(opts: Options = {}) {
@@ -17,11 +56,11 @@ export async function normalizeA8Offers(opts: Options = {}) {
 
   let updated = 0;
   let scanned = 0;
-
   let batch = db.batch();
 
   for (const doc of snap.docs) {
     scanned++;
+
     const o = doc.data() as {
       title?: string;
       siteIds?: string[];
@@ -32,17 +71,26 @@ export async function normalizeA8Offers(opts: Options = {}) {
       affiliateUrl?: string;
       archived?: boolean;
       updatedAt?: number;
+      extras?: any; // ここに pricing / shipping / payment / warranty などが入る
+      ui?: any;
     };
 
-    // --- siteIds 決定 ---
-    const siteIds = new Set<string>(Array.isArray(o.siteIds) ? o.siteIds : []);
-    if (opts.siteId) {
-      siteIds.add(opts.siteId); // 明示指定を最優先
-    } else {
-      for (const s of decideSitesByTitle(o.title ?? "")) siteIds.add(s);
-    }
+    /* --- siteIds --- */
+    const originalSiteIds = Array.isArray(o.siteIds) ? o.siteIds : [];
+    const siteIds = new Set<string>(originalSiteIds);
 
-    // --- affiliateUrl フォールバック（text → banner の順） ---
+    if (opts.siteId) {
+      // 呼び出し時に siteId を明示された場合はそれを追加
+      siteIds.add(opts.siteId);
+    } else if (siteIds.size === 0) {
+      // JSON 側で siteIds が空 or 未設定のときだけタイトルから推論
+      for (const s of decideSitesByTitle(o.title ?? "")) {
+        siteIds.add(s);
+      }
+    }
+    // 既に JSON に書いてある siteIds（例: ["kariraku"]）はそのまま尊重される
+
+    /* --- affiliateUrl フォールバック（text → banner） --- */
     let affiliateUrl = o.affiliateUrl || "";
     if (!affiliateUrl && Array.isArray(o.creatives)) {
       const text = o.creatives.find((c: any) => c?.type === "text") as
@@ -54,11 +102,22 @@ export async function normalizeA8Offers(opts: Options = {}) {
       affiliateUrl = text?.href || banner?.href || "";
     }
 
+    /* --- UI派生 --- */
+    const priceLabel = buildPriceLabel(o);
+    const minTermLabel = buildMinTermLabel(o);
+    const isPriceDynamic = !!o?.extras?.pricing?.priceIsDynamic;
+
     const patch = {
       siteIds: Array.from(siteIds),
       affiliateUrl: affiliateUrl || null,
       archived: o.archived ?? false,
-      updatedAt: o.updatedAt ?? Date.now(),
+      updatedAt: Date.now(),
+      ui: {
+        ...(o.ui || {}),
+        priceLabel: priceLabel ?? null,
+        minTermLabel: minTermLabel ?? null,
+        isPriceDynamic,
+      },
     };
 
     batch.set(doc.ref, patch, { merge: true });

@@ -1,3 +1,4 @@
+// firebase/functions/src/lib/sites/sites.ts
 import fs from "node:fs";
 import path from "node:path";
 import type { Firestore } from "firebase-admin/firestore";
@@ -25,7 +26,11 @@ export async function getBlogEnabledSiteIds(db: Firestore): Promise<string[]> {
     .where("features.blogs", "==", true)
     .get();
 
+  // siteId フィールドが無い場合でも doc.id をフォールバック
   return snap.docs
-    .map((d) => (d.data() as { siteId?: string }).siteId)
-    .filter(Boolean) as string[];
+    .map((d) => {
+      const data = d.data() as { siteId?: string };
+      return data.siteId ?? d.id;
+    })
+    .filter(Boolean);
 }

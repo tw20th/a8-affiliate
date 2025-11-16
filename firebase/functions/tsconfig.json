@@ -3,19 +3,17 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"],
+    "sourceMap": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/scripts/normalizeProducts.mjs",
-    "../../_archive/scheduledBlogMorning.ts",
-    "../../_archive/scheduledBlogNoon.ts"
-  ],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

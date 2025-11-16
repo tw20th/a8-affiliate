@@ -31,11 +31,29 @@ function classify(b: BlogRow): "pricedrop" | "review" | "comparison" {
   return "comparison";
 }
 
-export async function generateMetadata() {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: SP;
+}) {
+  const sort = (searchParams?.sort as SortKey) ?? "recent";
+  const type = (searchParams?.type as BlogType) ?? "all";
+  const indexable = sort === "recent" && type === "all";
+
+  const base = (
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.kariraku.com"
+  ).replace(/\/$/, "");
+
   return {
     title: "ブログ｜値下げ情報・レビューまとめ",
     description:
       "最新の値下げ情報やレビュー記事を公開日順で表示。価格ソースと公開日時を明記しています。",
+    alternates: { canonical: `${base}/blog` },
+    robots: {
+      index: indexable,
+      follow: true,
+      googleBot: { index: indexable, follow: true },
+    },
   };
 }
 
@@ -195,10 +213,10 @@ export default async function BlogIndex({
       )}
 
       <div className="mt-8 text-sm text-gray-600">
-        <Link href="/products" className="underline">
-          商品一覧
+        <Link href="/offers" className="underline">
+          家電レンタル特集
         </Link>{" "}
-        もどうぞ。値下げがあればブログでお知らせします。
+        もどうぞ。値下げやキャンペーンはブログでお知らせします。
       </div>
     </main>
   );

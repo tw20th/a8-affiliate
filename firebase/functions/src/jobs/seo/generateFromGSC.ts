@@ -1,4 +1,3 @@
-// firebase/functions/src/jobs/seo/generateFromGSC.ts
 import * as functions from "firebase-functions";
 import { getFirestore } from "firebase-admin/firestore";
 import { getApps, initializeApp } from "firebase-admin/app";
@@ -38,6 +37,12 @@ type ProductDoc = {
   updatedAt?: number;
   createdAt?: number;
 };
+
+type UnsplashHero = {
+  url: string;
+  credit: string;
+  creditLink: string;
+} | null;
 
 /* ====== util ====== */
 function slugifyKeyword(kw: string) {
@@ -89,7 +94,54 @@ function getOpenAI(): OpenAI {
   return (_openai ??= new OpenAI({ apiKey: k }));
 }
 
-/* ====== products → 比較表（元コードの簡約版） ====== */
+/* ====== Unsplash: ヒーロー画像取得 ====== */
+async function findUnsplashHero(query: string): Promise<UnsplashHero> {
+  try {
+    const key = process.env.UNSPLASH_ACCESS_KEY;
+    if (!key) return null;
+    // 日本語でもOK。家電系の汎用ワードを足して当たりやすくする
+    const q = [query, "home appliances OR rental OR compare"].join(" ");
+    const url =
+      "https://api.unsplash.com/search/photos?" +
+      new URLSearchParams({
+        query: q,
+        per_page: "1",
+        orientation: "landscape",
+        content_filter: "high",
+      }).toString();
+
+    const resp = await fetch(url, {
+      headers: { Authorization: `Client-ID ${key}` },
+    });
+    if (!resp.ok) return null;
+    const json: any = await resp.json();
+    const hit = json?.results?.[0];
+    if (!hit) return null;
+
+    const rawUrl: string =
+      hit.urls?.regular ||
+      hit.urls?.full ||
+      hit.urls?.small ||
+      hit.urls?.raw ||
+      "";
+    if (!rawUrl) return null;
+
+    // images.unsplash.com をそのまま保存（クレジットも付与）
+    const creditUser = hit.user?.name || "Unsplash Contributor";
+    const creditLink =
+      hit.links?.html || hit.user?.links?.html || "https://unsplash.com";
+
+    return {
+      url: rawUrl,
+      credit: creditUser,
+      creditLink,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/* ====== products → 比較表 ====== */
 function extractSpecs(p: ProductDoc) {
   const text = [p.title, p.productName, p.name, ...(p.specs?.features || [])]
     .filter(Boolean)
@@ -188,7 +240,7 @@ function injectComparisonTable(md: string, tableMd: string): string {
   if (hasSection) {
     return md.replace(
       /(##\s*比較表\s*\n)([\s\S]*?)(\n##\s|$)/m,
-      (_m, h1, _body, tail) => `${h1}\n${tableMd}\n${tail || ""}`
+      (_m, h1, _body, tail) => `${h1}\n\n${tableMd}\n${tail || ""}`
     );
   }
   const firstH2 = md.indexOf("\n## ");
@@ -199,7 +251,7 @@ function injectComparisonTable(md: string, tableMd: string): string {
   return `${md.trim()}\n\n## 比較表\n\n${tableMd}\n`;
 }
 
-/* ====== プロンプト（既存 buildGscUpdatePrompt を同梱） ====== */
+/* ====== プロンプト ====== */
 function buildGscUpdatePrompt(params: {
   siteId: string;
   keyword: string;
@@ -277,6 +329,12 @@ async function upsertBlogByKeyword(siteId: string, keyword: string) {
 
   const content = await appendPainCTASection(siteId, md);
 
+  // ==== ★ Unsplash ヒーロー画像 ====
+  const hero = await findUnsplashHero(`${keyword} ${siteId}`);
+  const imageUrl = hero?.url ?? null;
+  const imageCredit = hero?.credit ?? null;
+  const imageCreditLink = hero?.creditLink ?? null;
+
   const now = Date.now();
   await db
     .collection("blogs")
@@ -289,7 +347,9 @@ async function upsertBlogByKeyword(siteId: string, keyword: string) {
         title: `${keyword}｜比較・選び方ガイド`,
         summary: null,
         content,
-        imageUrl: null,
+        imageUrl,
+        imageCredit,
+        imageCreditLink,
         tags: ["比較", "選び方", "GSC"],
         relatedAsin: null,
         createdAt: now,
@@ -306,7 +366,14 @@ async function upsertBlogByKeyword(siteId: string, keyword: string) {
       },
       { merge: false }
     );
-  return { siteId, keyword, slug, created: 1, compared: top.length };
+  return {
+    siteId,
+    keyword,
+    slug,
+    created: 1,
+    compared: top.length,
+    hero: !!hero,
+  };
 }
 
 /* ====== main run for site ====== */
@@ -350,9 +417,9 @@ async function runOnceForSite(
 }
 
 /* ====== exports ====== */
-/** 毎朝 07:30 JST：各サイトのGSC上位クエリから最大2件を自動更新/作成（比較表付き） */
+/** 毎朝 07:30 JST：各サイトのGSC上位クエリから最大2件を自動更新/作成（比較表＋Unsplash画像） */
 export const generateFromGSC = functions
-  .runWith({ secrets: ["OPENAI_API_KEY"] })
+  .runWith({ secrets: ["OPENAI_API_KEY", "UNSPLASH_ACCESS_KEY"] })
   .region(REGION)
   .pubsub.schedule("30 7 * * *")
   .timeZone("Asia/Tokyo")
@@ -371,7 +438,7 @@ export const generateFromGSC = functions
 
 /** 手動実行（テスト用）: ?siteId=xxx&max=2&relaxed=1 */
 export const runGenerateFromGscNow = functions
-  .runWith({ secrets: ["OPENAI_API_KEY"] })
+  .runWith({ secrets: ["OPENAI_API_KEY", "UNSPLASH_ACCESS_KEY"] })
   .region(REGION)
   .https.onRequest(async (req, res) => {
     try {

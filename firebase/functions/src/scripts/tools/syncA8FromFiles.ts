@@ -2,8 +2,7 @@
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import { db } from "../../lib/infra/db.js"; // ← ここを getFirestore ではなく単一化された db に
-// getFirestore の import は削除
+import { db } from "../../lib/infra/db.js";
 
 // ---- types ----
 type Creative = {
@@ -15,23 +14,32 @@ type Creative = {
   imgSrc?: string;
 };
 
+type InFileProgram = {
+  programId?: string;
+  advertiser: string;
+  category?: string[];
+  advertiserInfo?: Record<string, unknown>;
+};
+
+type InFileOffer = {
+  id?: string;
+  title: string;
+  description?: string;
+  price?: number;
+  planType?: "product" | "subscription" | "trial";
+  landingUrl: string;
+  affiliateUrl?: string;
+  images?: string[];
+  badges?: string[];
+  tags?: string[];
+  siteIds?: string[];
+  extras?: Record<string, unknown>;
+  creatives?: Creative[];
+};
+
 type InFile = {
-  program: { programId?: string; advertiser: string; category?: string[] };
-  offer: {
-    id?: string;
-    title: string;
-    description?: string;
-    price?: number;
-    planType?: "product" | "subscription" | "trial";
-    landingUrl: string;
-    affiliateUrl?: string;
-    images?: string[];
-    badges?: string[];
-    tags?: string[];
-    siteIds?: string[];
-    extras?: Record<string, unknown>;
-    creatives?: Creative[];
-  };
+  program: InFileProgram;
+  offer: InFileOffer;
 };
 
 type SyncA8Options = {
@@ -65,6 +73,7 @@ function loadState(): State {
     return { files: {} };
   }
 }
+
 function saveState(st: State) {
   try {
     fs.writeFileSync(STATE_FILE, JSON.stringify(st, null, 2), "utf-8");
@@ -78,6 +87,7 @@ function ensureUrl(u?: string) {
   if (!u || !/^https?:\/\//.test(u)) throw new Error(`Invalid URL: ${u}`);
   return u;
 }
+
 function toNumberOrUndef(v: unknown): number | undefined {
   if (v === null || v === undefined || v === "") return undefined;
   const n = Number(v);
@@ -109,9 +119,12 @@ async function upsert(siteId: string, data: InFile, dryRun: boolean) {
     siteIdPrimary: siteId,
     updatedAt: t,
     createdAt: t,
+    // ★ 企業情報を Firestore にも保存
+    advertiserInfo: data.program.advertiserInfo ?? null,
   };
 
   const price = toNumberOrUndef(data.offer.price);
+
   const offerDoc: Record<string, unknown> = {
     id: offerId,
     programId,
@@ -134,15 +147,21 @@ async function upsert(siteId: string, data: InFile, dryRun: boolean) {
     updatedAt: t,
     createdAt: t,
   };
-  if (price !== undefined) offerDoc.price = price;
 
-  if (dryRun) return { programId, offerId, dryRun: true };
+  if (price !== undefined) {
+    offerDoc.price = price;
+  }
+
+  if (dryRun) {
+    return { programId, offerId, dryRun: true };
+  }
 
   await db
     .collection("programs")
     .doc(programId)
     .set(programDoc, { merge: true });
   await db.collection("offers").doc(offerId).set(offerDoc, { merge: true });
+
   return { programId, offerId };
 }
 
@@ -152,9 +171,6 @@ export async function syncA8FromFiles(opts: SyncA8Options) {
   const dir = path.resolve(opts.dir ?? "ingest/a8");
   const dryRun = !!opts.dryRun;
   const archiveMissing = !!opts.archiveMissing;
-
-  // Firestore へ undefined を書かない保険（db.ts で一度だけ設定済み）
-  // ここで settings() を再度呼ばないこと！ ← 二重初期化の原因になる
 
   const files = fs.existsSync(dir)
     ? fs.readdirSync(dir).filter((f) => f.endsWith(".json"))
@@ -170,6 +186,7 @@ export async function syncA8FromFiles(opts: SyncA8Options) {
     const raw = fs.readFileSync(p, "utf-8");
     const h = hash(raw);
 
+    // 変更がないファイルはスキップ
     if (state.files[p] === h) continue;
 
     const data = JSON.parse(raw) as InFile;
@@ -179,6 +196,7 @@ export async function syncA8FromFiles(opts: SyncA8Options) {
       `p_${hash(`${data.program.advertiser}:${data.offer.title}`)}`;
     const oid =
       data.offer.id ?? `${pid}:${hash(`${pid}:${data.offer.landingUrl}`)}`;
+
     seenOfferIds.add(oid);
 
     await upsert(siteId, data, dryRun);
@@ -187,6 +205,7 @@ export async function syncA8FromFiles(opts: SyncA8Options) {
   }
 
   let archived = 0;
+
   if (archiveMissing && !dryRun) {
     const snap = await db
       .collection("offers")
@@ -195,6 +214,7 @@ export async function syncA8FromFiles(opts: SyncA8Options) {
 
     for (const doc of snap.docs) {
       const o = doc.data() as { id?: string; archived?: boolean };
+
       if (o?.id && !seenOfferIds.has(o.id) && !o.archived) {
         await doc.ref.set(
           { archived: true, updatedAt: now() },
@@ -205,17 +225,21 @@ export async function syncA8FromFiles(opts: SyncA8Options) {
     }
   }
 
-  if (!dryRun) saveState(state);
+  if (!dryRun) {
+    saveState(state);
+  }
 
   return { processed, archived, files: files.length, dryRun };
 }
 
-/* ===== CLI 実行サポート（任意） =====
-   node dist/scripts/tools/syncA8FromFiles.js --site=a8 --dir=ingest/a8 --archive-missing
+/* ===== CLI 実行サポート =====
+   例:
+   pnpm -C firebase/functions exec tsx src/scripts/tools/syncA8FromFiles.ts site=kariraku dir=ingest/a8
 */
 if (process.argv[1] && /syncA8FromFiles\.(ts|js)$/.test(process.argv[1])) {
   (async () => {
     const args = new URLSearchParams(process.argv.slice(2).join("&"));
+
     const site = String(args.get("site") || "");
     const dir = args.get("dir") || undefined;
     const dryRun =
@@ -225,10 +249,17 @@ if (process.argv[1] && /syncA8FromFiles\.(ts|js)$/.test(process.argv[1])) {
       args.get("archiveMissing") === "true";
 
     if (!site) {
-      console.error("--site is required");
+      console.error("--site is required (e.g. site=kariraku)");
       process.exit(1);
     }
-    const result = await syncA8FromFiles({ site, dir, dryRun, archiveMissing });
+
+    const result = await syncA8FromFiles({
+      site,
+      dir,
+      dryRun,
+      archiveMissing,
+    });
+
     console.log(result);
   })().catch((e) => {
     console.error(e);

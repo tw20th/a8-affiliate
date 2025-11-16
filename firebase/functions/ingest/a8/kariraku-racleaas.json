@@ -1,0 +1,257 @@
+{
+  "program": {
+    "advertiserInfo": {
+      "companyName": "グランドランドAZ株式会社",
+      "officialName": "グランドランドAZ株式会社（GrandlandAZ CO.,Ltd.）",
+      "founded": "2021年9月",
+      "headquarters": "〒733-0873 広島県広島市西区古江新町4-23 アルファ大田202",
+      "capital": "51百万円（5,100万円）",
+      "employees": "非公開",
+      "businessAreas": [
+        "新品家電・家具のサブスクリプションサービス「RaCLEaaS（ラクリアーズ）」の企画・運営",
+        "生活スタイルに合わせた家電・家具コーディネート提案",
+        "不動産・住宅関連事業者との提携による新生活サポートサービス"
+      ],
+      "strengths": [
+        "すべて新品の家電・家具のみを提供し、清潔・安心感を重視したサブスク運営",
+        "初期費用不要（配送・設置・一部リサイクル費用込み）で導入しやすい料金設計",
+        "1〜5年の中から選べる契約期間と、契約満了時の「継続・買取・返却・新商品への交換」という4つの選択肢",
+        "日本全国（沖縄県・離島を除く）への配送対応と、家電・家具セットの豊富なラインナップ"
+      ],
+      "officialUrls": {
+        "company": "https://racleaas.com/company/",
+        "service": "https://racleaas.com/",
+        "vision": "https://racleaas.jp/subscription/vision01/"
+      },
+      "socials": {
+        "x": "",
+        "instagram": "https://www.instagram.com/racleaas_official/",
+        "facebook": "https://www.facebook.com/RaCLEaaS.official/"
+      }
+    },
+    "programId": "s00000026187001",
+    "advertiser": "グランドランドAZ株式会社",
+    "category": ["その他（暮らし）", "家電", "家具", "サブスク"]
+  },
+  "offer": {
+    "id": "s00000026187001:racleaas",
+    "title": "すべて新品　家電・家具もサブスク【ラクリアーズ】",
+    "description": "初期費用0円で新品の家電・家具を月額で利用できるサブスクサービス。1〜5年の契約期間から選べて、満了時は継続・買取・返却・新商品への交換が選べる。全国（沖縄・一部離島除く）配送対応で、新生活や単身赴任、同棲・子育て世帯にも使いやすい。",
+    "planType": "subscription",
+    "landingUrl": "https://racleaas.com/",
+    "affiliateUrl": "https://px.a8.net/svt/ejp?a8mat=45GEHB+BIDRCY+5M26+5YJRM",
+    "images": [],
+    "badges": [
+      "すべて新品",
+      "初期費用0円",
+      "家電・家具サブスク",
+      "全国対応（沖縄・離島除く）",
+      "最大5年保証",
+      "契約満了時4つの選択肢（継続・買取・返却・交換）"
+    ],
+    "tags": [
+      "家電サブスク",
+      "家具サブスク",
+      "新品レンタル",
+      "一人暮らし",
+      "ファミリー",
+      "単身赴任",
+      "同棲",
+      "子育て",
+      "新生活",
+      "長期利用"
+    ],
+    "siteIds": ["kariraku"],
+    "extras": {
+      "reward": "新規サブスク申込60％",
+      "epc": 16.13,
+      "confirmRate": "7.69%",
+      "lookbackDays": 90,
+      "confirmEta": "約45日",
+      "ui": {
+        "priceLabel": "月額目安 ー",
+        "minTermLabel": "月額 12ヶ月〜",
+        "isPriceDynamic": true,
+        "compareHighlight": "新品家電のサブスクが最安級"
+      },
+      "targetArea": "全国（沖縄県・一部離島を除く）",
+      "targetUsers": [
+        "進学や就職で一人暮らしを始める人",
+        "同棲・結婚・子育てで住まいが変わる人",
+        "単身赴任・転勤で一定期間だけ家電・家具が必要な人"
+      ],
+      "listingPolicy": "一部OK（社名・サービス名・表記ゆれなどの指名・想起系キーワードでのリスティングはNG）",
+      "devices": ["PC", "スマホ"],
+      "notes": [
+        "広告表示（PR表記）をファーストビュー等で明示する必要あり",
+        "広告掲載URLはA8側への提出が必要",
+        "A8.netでの禁止事項・リスティング規定を順守すること"
+      ],
+      "pricing": {
+        "plan": "subscription",
+        "monthlyPriceFrom": null,
+        "shortBase": null,
+        "extendPerDayExample": null,
+        "priceIsDynamic": true,
+        "priceLastChecked": 0
+      },
+      "minTerm": {
+        "shortDays": null,
+        "monthlyMonths": 12
+      },
+      "paymentDetail": {
+        "methods": ["クレジットカード"],
+        "cardBrands": [
+          "VISA",
+          "Mastercard",
+          "JCB",
+          "American Express",
+          "Diners Club"
+        ],
+        "threeDSecure": null,
+        "notes": [
+          "支払い方法はクレジットカード決済のみ",
+          "デビットカード・プリペイドカード・デポジット型クレジットカードは利用不可",
+          "銀行振込・コンビニ払いなどの他の決済手段は利用不可"
+        ],
+        "timing": {
+          "shortRentalCharge": null,
+          "extensionCharge": null,
+          "monthlyCharge": "毎月のサブスク料金をクレジットカードで自動決済"
+        },
+        "billingFailure": "利用審査や決済の結果によっては利用不可となる場合があり、支払い方法の変更や申込キャンセルが発生することがある"
+      },
+      "shipping": {
+        "carrier": "宅配便（商品・地域により異なる）",
+        "roundTripFree": false,
+        "exceptions": {
+          "沖縄県・離島": "サービス対象外",
+          "一部地域": "配送が難しい場合は申込を無料キャンセル"
+        },
+        "returnLabelIncluded": false,
+        "returnMethods": ["宅配業者による集荷（商品・契約内容により異なる）"],
+        "packagingNote": "初回の配送・設置・一部リサイクル費用は月額料金に含まれる。返却時の送料は原則として利用者負担。",
+        "areaNote": "日本全国で利用可能（沖縄県・一部離島除く）。搬入経路や設置場所の条件によっては申込がキャンセルとなる場合あり。"
+      },
+      "warranty": {
+        "normalWearFree": true,
+        "repairCapYen": null,
+        "lostTheftMax": null,
+        "notes": [
+          "メーカー保証と物損付延長保証が付帯し、自然故障は無償修理・交換の対象",
+          "落下・水濡れなど一部の物損も保証対象となるが、内容によっては自己負担が発生する場合あり",
+          "保証期間は最長5年相当の長期サポートを想定"
+        ]
+      },
+      "policies": {
+        "disclosureRequired": true,
+        "prLabelRequired": true,
+        "listingAdsNG": true
+      },
+      "faqHints": [
+        "利用可能エリアは日本全国（沖縄県・一部離島を除く）",
+        "契約期間は1〜5年から選択可能で、中長期利用向けの料金設計",
+        "契約満了時は継続利用・買取・返却・新商品への交換から選択可能",
+        "途中解約には所定の違約金が発生するため、事前に利用規約の確認が必要",
+        "身分証明書の提出は原則不要だが、高額利用等では提出を求められる場合あり"
+      ],
+      "rentalPolicy": {
+        "short": {
+          "extensionMaxNights": null,
+          "extensionRule": null
+        },
+        "monthly": {
+          "renewal": "1〜5年の契約期間を選択。契約満了時に継続・買取・返却・新商品交換から選べる。",
+          "charge": "月額サブスク料金を毎月クレジットカードで自動決済",
+          "cancel": "契約期間中の途中解約は所定の途中解約料金が発生"
+        },
+        "changesAfterOrder": "配送前の変更・キャンセルは条件付きで対応。搬入不可の場合はキャンセル料が発生するケースあり。"
+      },
+      "rentalKinds": [
+        "家電サブスク",
+        "家具サブスク",
+        "家電・家具セットサブスク"
+      ],
+      "genres": [
+        "冷蔵庫",
+        "洗濯機・洗濯乾燥機",
+        "電子レンジ・オーブンレンジ",
+        "テレビ",
+        "エアコン・空調家電",
+        "炊飯器・キッチン家電",
+        "ベッド・マットレス",
+        "ソファ",
+        "ダイニングテーブル・チェア",
+        "テレビボード・収納家具",
+        "デスク・ワークチェア",
+        "一人暮らし向け家電セット",
+        "ファミリー向け家電セット"
+      ],
+      "rankingSamples": [
+        {
+          "title": "一人暮らし向け 家電3点セット（冷蔵庫・洗濯機・電子レンジ）",
+          "minTermText": "1年〜5年",
+          "priceText": "月額料金は商品グレードと契約年数により変動 ※目安"
+        },
+        {
+          "title": "二人暮らし・カップル向け 家具・家電トータルコーデセット",
+          "minTermText": "1年〜5年",
+          "priceText": "ソファ・ベッド・テーブルなどを一括でサブスク利用可能"
+        },
+        {
+          "title": "ファミリー向け 大容量冷蔵庫＆洗濯機セット",
+          "minTermText": "1年〜5年",
+          "priceText": "長期契約ほど月額がお得になる料金設計"
+        }
+      ],
+      "guideLinks": {
+        "payment": "https://racleaas.com/guide/",
+        "shipping": "https://racleaas.com/guide/",
+        "warranty": "https://racleaas.com/tradelaw/",
+        "faq": "https://racleaas.com/faq/"
+      }
+    },
+    "creatives": [
+      {
+        "materialId": "001",
+        "type": "text",
+        "label": "すべて新品　家電・家具もサブスク【ラクリアーズ】",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GEHB+BIDRCY+5M26+5YJRM"
+      },
+      {
+        "materialId": "002",
+        "type": "text",
+        "label": "【ラクリアーズ】",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GEHB+BIDRCY+5M26+5YRHE"
+      },
+      {
+        "materialId": "003",
+        "type": "banner",
+        "size": "300x250",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GEHB+BIDRCY+5M26+5YZ75",
+        "imgSrc": "https://www24.a8.net/svt/bgt?aid=251028047696&wid=003&eno=01&mid=s00000026187001003000&mc=1"
+      },
+      {
+        "materialId": "004",
+        "type": "banner",
+        "size": "100x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GEHB+BIDRCY+5M26+5Z6WX",
+        "imgSrc": "https://www27.a8.net/svt/bgt?aid=251028047696&wid=003&eno=01&mid=s00000026187001004000&mc=1"
+      },
+      {
+        "materialId": "005",
+        "type": "banner",
+        "size": "120x60",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GEHB+BIDRCY+5M26+5ZEMP",
+        "imgSrc": "https://www22.a8.net/svt/bgt?aid=251028047696&wid=003&eno=01&mid=s00000026187001005000&mc=1"
+      },
+      {
+        "materialId": "006",
+        "type": "banner",
+        "size": "200x200",
+        "href": "https://px.a8.net/svt/ejp?a8mat=45GEHB+BIDRCY+5M26+5ZMCH",
+        "imgSrc": "https://www27.a8.net/svt/bgt?aid=251028047696&wid=003&eno=01&mid=s00000026187001006000&mc=1"
+      }
+    ]
+  }
+}

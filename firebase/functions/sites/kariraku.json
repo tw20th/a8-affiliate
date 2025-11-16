@@ -22,6 +22,9 @@
   "contentPlan": {
     "weekly": { "pillarIntent": "比較/選び方の柱記事を増やす" }
   },
+  "images": {
+    "preferUnsplashHero": true
+  },
 
   "brand": {
     "primary": "#10B981",

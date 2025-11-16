@@ -1,15 +1,7 @@
+// apps/web/app/pain/[id]/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServerSiteId } from "@/lib/site-server";
-import {
-  fsRunQuery,
-  vNum,
-  vStr,
-  fsGetStringArray as vStrArr,
-  docIdFromName,
-} from "@/lib/firestore-rest";
-import type { Product } from "@affiscope/shared-types";
-import ProductCard from "@/components/products/ProductCard";
 import { decodePainRules } from "@/lib/pain-rules";
 
 export const revalidate = 60;
@@ -37,81 +29,10 @@ async function loadPainRule(siteId: string, id: string) {
   return rules.find((r) => r.id === id) ?? null;
 }
 
-// タグ OR で商品取得（array-contains なし版）
-async function fetchProductsByTags(
-  siteId: string,
-  tags: string[],
-  limit = 24
-): Promise<Product[]> {
-  if (tags.length === 0) return [];
-
-  // サーバ取得は siteId のみ。多めに取り、クライアントで tags をフィルタ
-  const docs = await fsRunQuery({
-    collection: "products",
-    where: [{ field: "siteId", value: siteId }],
-    orderBy: [{ field: "updatedAt", direction: "DESCENDING" as const }],
-    limit: Math.max(limit * 3, 60), // 少し多めに
-  }).catch(() => []);
-
-  const want = new Set(tags);
-  const seen = new Set<string>();
-  const rows: Product[] = [];
-
-  for (const d of docs) {
-    const id = docIdFromName(d.name);
-    if (seen.has(id)) continue;
-    const f = d.fields as Record<string, any>;
-    const tagArr = vStrArr(f, "tags") ?? [];
-
-    // 交差があるか
-    if (!tagArr.some((t) => want.has(t))) continue;
-
-    seen.add(id);
-
-    const price = vNum(f, "bestPrice.price");
-    const url = vStr(f, "bestPrice.url");
-    const source = vStr(f, "bestPrice.source") as
-      | "amazon"
-      | "rakuten"
-      | undefined;
-    const updatedAt = vNum(f, "bestPrice.updatedAt");
-
-    rows.push({
-      asin: id,
-      title: vStr(f, "title") ?? "",
-      brand: vStr(f, "brand") ?? undefined,
-      imageUrl: vStr(f, "imageUrl") ?? undefined,
-      categoryId: vStr(f, "categoryId") ?? "",
-      siteId,
-      tags: tagArr,
-      specs: undefined,
-      offers: [],
-      bestPrice:
-        typeof price === "number" &&
-        url &&
-        source &&
-        typeof updatedAt === "number"
-          ? { price, url, source, updatedAt }
-          : undefined,
-      priceHistory: [],
-      aiSummary: vStr(f, "aiSummary") ?? undefined,
-      views: vNum(f, "views") ?? 0,
-      createdAt: vNum(f, "createdAt") ?? 0,
-      updatedAt: vNum(f, "updatedAt") ?? 0,
-    });
-
-    if (rows.length >= limit) break;
-  }
-
-  return rows;
-}
-
 export default async function PainPage({ params }: { params: { id: string } }) {
   const siteId = getServerSiteId();
   const rule = await loadPainRule(siteId, params.id);
   if (!rule) return notFound();
-
-  const products = await fetchProductsByTags(siteId, rule.tags, 24);
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -129,49 +50,47 @@ export default async function PainPage({ params }: { params: { id: string } }) {
       <section className="mt-4 rounded-xl border p-4">
         <h2 className="mb-2 font-semibold">こんな時はありませんか？</h2>
         <p className="text-sm opacity-80">
-          毎日の作業や趣味の時間で感じる不快感・不安は、小さな工夫と正しいプロダクト選びで大きく改善できます。
-          下では、{rule.tags.map((t) => `#${t}`).join(" / ")}{" "}
-          に当てはまるおすすめを厳選しました。
+          毎日の作業や趣味の時間で感じる不快感・不安は、小さな工夫と
+          正しいサービス選びで大きく改善できます。 下では、
+          {rule.tags.map((t) => `#${t}`).join(" / ")} に関係する
+          視点を整理しています。
         </p>
       </section>
 
-      {/* 商品一覧（悩みに合う） */}
+      {/* 悩みに紐づくタグ・解説（旧: 商品一覧エリア） */}
       <section className="mt-8">
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-xl font-semibold">おすすめ</h2>
-          <div className="flex gap-2 text-xs opacity-70">
+          <h2 className="text-xl font-semibold">この悩みのポイント</h2>
+          <div className="flex flex-wrap gap-2 text-xs opacity-70">
             {rule.tags.map((t) => (
-              <Link
+              <span
                 key={t}
-                href={`/products?tag=${encodeURIComponent(t)}`}
-                className="rounded-full border px-2 py-0.5 hover:bg-gray-50"
+                className="rounded-full border px-2 py-0.5 bg-white"
               >
                 #{t}
-              </Link>
+              </span>
             ))}
           </div>
         </div>
 
-        {products.length === 0 ? (
-          <div className="rounded-lg border p-6 text-sm opacity-70">
-            該当商品がまだありません。
-          </div>
-        ) : (
-          <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {products.map((p) => (
-              <ProductCard key={p.asin} p={p} />
-            ))}
-          </ul>
-        )}
+        <div className="rounded-lg border p-6 text-sm opacity-80">
+          <p>
+            このページでは、A8オファーと連携したおすすめ一覧を順次追加していきます。
+          </p>
+          <p className="mt-2">
+            いまは「悩み」と「タグ」の整理が中心ですが、
+            近いうちにこの悩みにピッタリなサービスをここで比較できるようにする予定です。
+          </p>
+        </div>
       </section>
 
       {/* CTA */}
       <section className="mt-10 rounded-xl border p-4 text-sm">
-        <p className="mb-2 font-medium">購入前チェック</p>
+        <p className="mb-2 font-medium">チェックしておきたいポイント</p>
         <ul className="list-inside list-disc opacity-80">
-          <li>用途に合うタグ（{rule.tags.join(" / ")}）が付いているか</li>
-          <li>価格と在庫、直近の更新日時を確認</li>
-          <li>気になる商品はブックマークして比較</li>
+          <li>自分の悩み（{rule.label}）に近いかどうか</li>
+          <li>タグ（{rule.tags.join(" / ")}）の中で特に気になるもの</li>
+          <li>いまの状態で「やめたいこと」「増やしたいこと」は何か</li>
         </ul>
       </section>
     </main>

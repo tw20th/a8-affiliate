@@ -1,10 +1,9 @@
+// firebase/functions/src/services/gsc/client.ts
 import { getApps, initializeApp } from "firebase-admin/app";
 if (getApps().length === 0) initializeApp();
 
-import { google } from "googleapis";
-
-/** サービスアカウントJSON文字列 → JWTクライアント */
-export function makeGscJwt(saJson: string) {
+export async function makeGscJwt(saJson: string) {
+  const { google } = await import("googleapis"); // ★ここが遅延import
   const creds = JSON.parse(saJson);
   const jwt = new google.auth.JWT({
     email: creds.client_email,
@@ -14,7 +13,6 @@ export function makeGscJwt(saJson: string) {
   return google.searchconsole({ version: "v1", auth: jwt });
 }
 
-/** サイト設定からGSCのプロパティURLを推定（site.jsonにあればそれを使う） */
 export function resolvePropertyUrl(site: {
   domain?: string;
   gsc?: { propertyUrl?: string };

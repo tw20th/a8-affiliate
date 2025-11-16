@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
     "rebuild": "tsc -b tsconfig.build.json --force",
-    "clean": "rimraf dist tsconfig.build.tsbuildinfo"
+    "clean": "node -e \"const fs=require('fs');['dist','tsconfig.build.tsbuildinfo'].forEach(d=>{try{fs.rmSync(d,{recursive:true,force:true})}catch{}})\""
   },
   "devDependencies": {
     "rimraf": "^6.0.1",
