@@ -1,88 +1,117 @@
-# --- OS / エディタ ---
+# ==================================================
+# OS / エディタ
+# ==================================================
 .DS_Store
 Thumbs.db
 .idea/
+
 .vscode/*
 !.vscode/extensions.json
 !.vscode/launch.json
 !.vscode/tasks.json
 !.vscode/settings.json
 
-# --- Node / パッケージマネージャ ---
+
+# ==================================================
+# Node / パッケージマネージャ
+# ==================================================
 node_modules/
 npm-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 *.log
 
-# --- TypeScript ---
+
+# ==================================================
+# TypeScript
+# ==================================================
 **/*.tsbuildinfo
 
-# --- 環境変数 / 秘密鍵（最重要）---
+
+# ==================================================
+# 環境変数 / 秘密鍵（最重要）
+# ==================================================
 .env
 .env.*
 !.env.example
+
 apps/web/.env.local
 firebase/functions/.env
+
 *.pem
 *.p12
 *.key
 *.crt
 *.der
 *.keystore
-serviceAccount*.json
-*.secret.*
 
-# --- Next.js ---
+serviceAccount*.json
+firebase/functions/gsc_sa.json
+
+*.secret.*
+*.secret.json
+
+firebase/functions/secrets/
+
+
+# ==================================================
+# Next.js
+# ==================================================
 .next/
-# out/ は通常のエクスポートディレクトリだけ無視する
-# apps/web/out は無視するが、apps/web/app/out は許可する
-/out/
-!.apps/web/app/out/
 .vercel/
 
-# --- Firebase ---
+# 通常の export out は無視
+/out/
+
+# ただし app router 配下の out は許可
+!.apps/web/app/out/
+
+
+# ==================================================
+# Firebase
+# ==================================================
 .firebase/
 firebase/functions/.runtimeconfig.json
+
 **/firestore-debug.log
 **/*-debug.log
 
-# --- ビルド生成物 ---
-firebase/functions/lib/
-packages/**/dist/
-**/dist/
-# ↑ ただし src/** は push するので安全
 
-# --- カバレッジ / 一時ファイル ---
+# ==================================================
+# ビルド生成物
+# ==================================================
+**/dist/
+firebase/functions/lib/
+firebase/functions/dist/
+packages/**/dist/
+
+# ※ src/** は push する前提
+
+
+# ==================================================
+# カバレッジ / 一時ファイル
+# ==================================================
 coverage/
 .nyc_output/
-
-# --- pnpm ローカルストア（稀）---
-.pnpm-store/
-
-firebase/functions/shared-types/
-
-firebase/functions/secrets/
-*.secret.json
-
-# build outputs
-apps/web/.next
-apps/web/out
-firebase/functions/dist
-
-# logs & scratch
-*.log
-*-debug.log
 inv_*.json
 
-# local env & secrets (念のため)
-.env*
-firebase/functions/secrets/*
-firebase/functions/gsc_sa.json
+
+# ==================================================
+# pnpm / ローカルキャッシュ
+# ==================================================
+.pnpm-store/
 
 
+# ==================================================
+# Functions ローカル生成物・共有物
+# ==================================================
+firebase/functions/shared-types/
+firebase/functions/packages/
 
-# --- Turborepo / ビルドキャッシュ系（使っている場合）---
+
+# ==================================================
+# Turborepo / キャッシュ
+# ==================================================
 .turbo/
 apps/**/.turbo/
 apps/**/.next/cache/
